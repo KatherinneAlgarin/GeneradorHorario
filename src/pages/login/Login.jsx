@@ -5,41 +5,31 @@ import '../../styles/Login.css';
 export default function Login() {
   const navigate = useNavigate();
 
-  // 1. ESTADO DE LA VISTA
   const [currentView, setCurrentView] = useState('login');
-
-  // 2. ESTADOS PARA LOS DATOS
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // Datos específicos de recuperación
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryCode, setRecoveryCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // 3. ESTADOS DE CONTROL (UI)
+  //estados de control
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // <--- ¡NUEVO ESTADO!
-
-  // --- FUNCIONES AUXILIARES ---
+  const [isLoading, setIsLoading] = useState(false);
 
   const changeView = (view) => {
     setError('');
-    setIsLoading(false); // Aseguramos que el loader se apague al cambiar vista
+    setIsLoading(false); //apagar el loader al cambiar la vista
     setCurrentView(view);
   };
 
-  // --- MANEJADORES CON SIMULACIÓN DE CARGA ---
-
   const handleLogin = (e) => {
     e.preventDefault();
-    setIsLoading(true); // 1. Activamos carga
+    setIsLoading(true);
     
-    // Simulamos espera de 1.5 segundos (como si consultara al backend)
+    //esta es una simulacion de espera
     setTimeout(() => {
-      console.log("Login con:", email, password);
-      setIsLoading(false); // 2. Desactivamos carga
+      setIsLoading(false);
       navigate('/admin');
     }, 1500);
   };
@@ -51,11 +41,11 @@ export default function Login() {
       return;
     }
     
-    setIsLoading(true); // 1. Activamos carga
+    setIsLoading(true);
     
     setTimeout(() => {
       console.log("Enviando código a:", recoveryEmail);
-      setIsLoading(false); // 2. Desactivamos carga
+      setIsLoading(false);
       changeView('forgot-code');
     }, 1500);
   };
@@ -67,11 +57,11 @@ export default function Login() {
       return;
     }
 
-    setIsLoading(true); // 1. Activamos carga
+    setIsLoading(true);
 
     setTimeout(() => {
       console.log("Verificando código:", recoveryCode);
-      setIsLoading(false); // 2. Desactivamos carga
+      setIsLoading(false);
       changeView('forgot-reset');
     }, 1500);
   };
@@ -89,25 +79,22 @@ export default function Login() {
       return;
     }
 
-    setIsLoading(true); // 1. Activamos carga
+    setIsLoading(true);
 
     setTimeout(() => {
       console.log("Contraseña cambiada exitosamente");
       alert("¡Contraseña actualizada! Inicia sesión.");
-      
-      // Limpiamos todo
+
       setRecoveryEmail('');
       setRecoveryCode('');
       setNewPassword('');
       setConfirmPassword('');
-      setIsLoading(false); // 2. Desactivamos carga
+      setIsLoading(false);
       changeView('login');
     }, 1500);
   };
 
-  // --- RENDERIZADO ---
   let content;
-
   switch (currentView) {
     case 'login':
       content = (
@@ -122,7 +109,7 @@ export default function Login() {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading} // Deshabilita input mientras carga
+                disabled={isLoading}
               />
             </div>
             <div className="form-group">
@@ -133,16 +120,15 @@ export default function Login() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading} // Deshabilita input mientras carga
+                disabled={isLoading}
               />
             </div>
-            {/* BOTÓN INTELIGENTE */}
             <button type="submit" className="btn-login" disabled={isLoading}>
               {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
             </button>
           </form>
           
-          {/* Ocultamos el link si está cargando para evitar clics accidentales */}
+          {/* Ocultar el link si está cargando para evitar clics accidentales */}
           {!isLoading && (
             <a href="#" className="forgot-password" onClick={(e) => { e.preventDefault(); changeView('forgot-email'); }}>
               ¿Olvidaste tu contraseña?
@@ -208,7 +194,7 @@ export default function Login() {
                 value={recoveryCode}
                 onChange={(e) => setRecoveryCode(e.target.value)}
                 disabled={isLoading}
-                inputMode="numeric" // Mejora para móviles: abre teclado numérico
+                inputMode="numeric"
               />
               <span className="help-text">Revisa tu correo y escribe el código de 6 dígitos</span>
             </div>

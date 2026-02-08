@@ -1,20 +1,19 @@
 import React from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import './Layout.css';
+import '../../styles/Layout.css';
 
 const MainLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Para saber en qué ruta estamos y marcarla activa
+  const location = useLocation();
 
   const handleLogout = () => {
-    // Aquí borrarías el token del usuario más adelante
     navigate('/login');
   };
 
   return (
     <div className="layout-container">
       
-      {/* 1. SIDEBAR */}
+      {/*SIDEBAR*/}
       <aside className="sidebar">
         <div className="sidebar-logo">Universidad 🎓</div>
         
@@ -37,11 +36,10 @@ const MainLayout = () => {
               Horarios
             </Link>
           </li>
-          {/* Agrega aquí más opciones según necesites */}
         </ul>
       </aside>
 
-      {/* 2. HEADER */}
+      {/*HEADER*/}
       <header className="header">
         <div className="header-title">Panel de Administración</div>
         
@@ -53,7 +51,7 @@ const MainLayout = () => {
         </div>
       </header>
 
-      {/* 3. CONTENIDO DINÁMICO */}
+      {/*CONTENIDO DINAMICO */}
       <main className="main-content">
         <Outlet />
       </main>

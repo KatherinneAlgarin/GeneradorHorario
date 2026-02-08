@@ -4,8 +4,6 @@ import { AppRouter } from '../src/routes/AppRouter';
 import '../src/styles/App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
       {/* <div>
