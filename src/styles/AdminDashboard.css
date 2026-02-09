@@ -325,3 +325,100 @@
   color: white;
   box-shadow: 0 2px 5px rgba(218, 37, 37, 0)
 }
+
+/* --- ESTILOS GENERALES DE PÁGINA (Encabezados y Botones) --- */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px; /* Espacio antes de los filtros */
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Botón Principal (+ Nuevo Docente) */
+.btn-primary {
+  background-color: #DA2525; /* Tu rojo institucional */
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espacio entre icono y texto si hubiera */
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(218, 37, 37, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: #b31e1e; /* Rojo más oscuro al pasar el mouse */
+  transform: translateY(-2px); /* Pequeño efecto de elevación */
+  box-shadow: 0 6px 12px rgba(218, 37, 37, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* --- BARRA DE FILTROS Y BÚSQUEDA --- */
+
+.filters-bar {
+  background-color: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03); /* Sombra muy suave */
+  margin-bottom: 20px; /* Espacio antes de la tabla */
+  border: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+}
+
+/* Componente SearchBar */
+.search-container {
+  display: flex;
+  align-items: center;
+  background-color: #f9fafb; /* Fondo gris muy claro */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 16px;
+  width: 100%;
+  max-width: 400px; /* Ancho máximo del buscador */
+  transition: all 0.2s ease;
+}
+
+/* Efecto al hacer clic en el buscador */
+.search-container:focus-within {
+  background-color: white;
+  border-color: #DA2525; /* Borde rojo al escribir */
+  box-shadow: 0 0 0 3px rgba(218, 37, 37, 0.1); /* Resplandor rojo suave */
+}
+
+.search-icon {
+  color: #9ca3af; /* Gris icono */
+  font-size: 1.1rem;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 0.95rem;
+  color: #374151;
+  outline: none; /* Quitamos el borde azul por defecto del navegador */
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}

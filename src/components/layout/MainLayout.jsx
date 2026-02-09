@@ -13,9 +13,8 @@ const MainLayout = () => {
   return (
     <div className="layout-container">
       
-      {/*SIDEBAR*/}
       <aside className="sidebar">
-        <div className="sidebar-logo">Universidad 🎓</div>
+        <div className="sidebar-logo">UNICAES</div>
         
         <ul className="nav-links">
           <li className="nav-item">
@@ -26,11 +25,16 @@ const MainLayout = () => {
               Dashboard
             </Link>
           </li>
+
           <li className="nav-item">
-            <Link to="/admin/usuarios" className="nav-link">
-              Gestionar Usuarios
+            <Link 
+                to="/admin/docentes" 
+                className={`nav-link ${location.pathname.includes('/docentes') ? 'active' : ''}`}
+            >
+              Gestión Docente
             </Link>
           </li>
+
           <li className="nav-item">
             <Link to="/admin/horarios" className="nav-link">
               Horarios
@@ -39,19 +43,14 @@ const MainLayout = () => {
         </ul>
       </aside>
 
-      {/*HEADER*/}
       <header className="header">
         <div className="header-title">Panel de Administración</div>
-        
         <div className="user-profile">
           <span>Hola, <strong>Administrador</strong></span>
-          <button onClick={handleLogout} className="btn-logout">
-            Salir
-          </button>
+          <button onClick={handleLogout} className="btn-logout">Salir</button>
         </div>
       </header>
 
-      {/*CONTENIDO DINAMICO */}
       <main className="main-content">
         <Outlet />
       </main>
