@@ -36,6 +36,15 @@ const MainLayout = () => {
 
           <li className="nav-item">
             <Link 
+                to="/admin/infraestructura" 
+                className={`nav-link ${location.pathname.includes('/infraestructura') ? 'active' : ''}`}
+            >
+              Infraestructura
+            </Link>
+          </li>
+          
+          <li className="nav-item">
+            <Link 
                 to="/admin/docentes" 
                 className={`nav-link ${location.pathname.includes('/docentes') ? 'active' : ''}`}
             >

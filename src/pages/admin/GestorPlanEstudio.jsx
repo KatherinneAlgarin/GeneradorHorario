@@ -1,57 +1,143 @@
 import React, { useState, useEffect } from 'react';
 import Table from '../../components/common/Table';
 import SearchBar from '../../components/common/SearchBar';
-import ModalGeneral from '../../components/common/ModalGeneral';
+import ModalGeneral from '../../components/common/ModalGeneral'; 
 import { usePlanEstudio } from '../../hooks/usePlanEstudio';
 import '../../styles/AdminDashboard.css';
 
 const GestorPlanes = () => {
-  const { planes, carreras, searchTerm, setSearchTerm, modalState, openAddModal, openEditModal, closeModal, handleSavePlan, deletePlan, toggleStatus } = usePlanEstudio();
+  const { 
+    planes, 
+    carreras, 
+    columns, 
+    searchTerm, setSearchTerm, 
+    modalState, 
+    openAddModal, openEditModal, closeModal, 
+    handleSavePlan 
+  } = usePlanEstudio();
+
   const [formData, setFormData] = useState(null);
 
-  useEffect(() => { if (modalState.isOpen) setFormData(modalState.data); }, [modalState]);
+  useEffect(() => {
+    if (modalState.isOpen) setFormData(modalState.data);
+  }, [modalState]);
 
-  const columns = [
-    { header: 'Nombre Plan', accessor: 'nombre' },
-    { header: 'Carrera', accessor: 'id_carrera', render: (row) => carreras.find(c => c.id_carrera === row.id_carrera)?.nombre || 'N/A' },
-    { header: 'Vigencia', accessor: 'anio_vigencia' },
-    { header: 'Estado', accessor: 'activo', render: (row) => (
-        <span className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'}`} onClick={() => toggleStatus(row.id_plan)} style={{cursor:'pointer'}}>
-          {row.activo ? 'Vigente' : 'Obsoleto'}
-        </span>
-      )}
-  ];
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)}>✏️</button>
-      <button className="btn-icon delete" onClick={() => deletePlan(row.id_plan)}>🗑️</button>
+      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar Plan">✏️</button>
     </div>
   );
 
   return (
     <div className="tab-view-container">
-      <div className="page-header" style={{marginTop:'20px'}}>
-        <h3 style={{color:'#555'}}>Planes de Estudio</h3>
+      {/* HEADER */}
+      <div className="page-header">
+        <h3 className="text-muted">Planes de Estudio</h3>
         <button className="btn-primary" onClick={openAddModal}>+ Nuevo Plan</button>
       </div>
-      <div className="filters-bar"><SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar plan o carrera..." /></div>
-      <Table columns={columns} data={planes} actions={renderActions} />
 
-      <ModalGeneral isOpen={modalState.isOpen} onClose={closeModal} title={modalState.type === 'add' ? 'Nuevo Plan' : 'Editar Plan'} footer={<><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={() => handleSavePlan(formData)}>Guardar</button></>}>
+      {/* FILTROS */}
+      <div className="filters-bar">
+        <SearchBar 
+          value={searchTerm} 
+          onChange={setSearchTerm} 
+          placeholder="Buscar por nombre, año o carrera..." 
+        />
+      </div>
+
+      {/* TABLA */}
+      <Table 
+        columns={columns} 
+        data={planes} 
+        actions={renderActions} 
+      />
+
+      {/* MODAL */}
+      <ModalGeneral
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.type === 'add' ? 'Registrar Plan de Estudio' : 'Editar Plan'}
+        footer={
+          <>
+            <button className="btn-cancel" onClick={closeModal}>Cancelar</button>
+            <button className="btn-save" onClick={() => handleSavePlan(formData)}>Guardar</button>
+          </>
+        }
+      >
         {formData && (
           <>
+            {/* Campo 1: Carrera */}
             <div className="form-row">
-              <div className="form-group-modal"><label>Nombre del Plan</label><input value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} placeholder="Ej. Plan 2024" /></div>
-              <div className="form-group-modal"><label>Año Vigencia</label><input type="number" value={formData.anio_vigencia} onChange={e => setFormData({...formData, anio_vigencia: e.target.value})} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group-modal" style={{width:'100%'}}>
+              <div className="form-group-modal full-width">
                 <label>Carrera Asociada</label>
-                <select value={formData.id_carrera} onChange={e => setFormData({...formData, id_carrera: e.target.value})}>
-                  <option value="">-- Seleccione Carrera --</option>
-                  {carreras.map(c => <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>)}
+                <select 
+                  name="id_carrera" 
+                  value={formData.id_carrera} 
+                  onChange={handleChange}
+                  className="form-select"
+                >
+                  <option value="">-- Seleccione una Carrera --</option>
+                  {carreras.map(car => (
+                    <option key={car.id_carrera} value={car.id_carrera}>
+                      {car.nombre}
+                    </option>
+                  ))}
                 </select>
+              </div>
+            </div>
+
+            {/* Campo 2 y 3: Nombre y Versión */}
+            <div className="form-row">
+              <div className="form-group-modal">
+                <label>Nombre del Plan</label>
+                <input 
+                  name="nombre" 
+                  value={formData.nombre} 
+                  onChange={handleChange} 
+                  placeholder="Ej. Plan 2023" 
+                />
+              </div>
+              <div className="form-group-modal">
+                <label>Versión</label>
+                <input 
+                  name="version" 
+                  value={formData.version} 
+                  onChange={handleChange} 
+                  placeholder="Ej. 1.0" 
+                />
+              </div>
+            </div>
+
+            {/* Campo 4 y 5: AÑOS (Input Number) */}
+            <div className="form-row">
+              <div className="form-group-modal">
+                <label>Año de Inicio</label>
+                <input 
+                  type="number" // <--- Solo número
+                  name="fecha_inicio" 
+                  value={formData.fecha_inicio} 
+                  onChange={handleChange} 
+                  placeholder="Ej. 2023"
+                  min="2000"
+                  max="2100"
+                />
+              </div>
+              <div className="form-group-modal">
+                <label>Año de Fin</label>
+                <input 
+                  type="number" // <--- Solo número
+                  name="fecha_fin" 
+                  value={formData.fecha_fin} 
+                  onChange={handleChange} 
+                  placeholder="Ej. 2028"
+                  min="2000"
+                  max="2100"
+                />
               </div>
             </div>
           </>
@@ -60,4 +146,5 @@ const GestorPlanes = () => {
     </div>
   );
 };
+
 export default GestorPlanes;

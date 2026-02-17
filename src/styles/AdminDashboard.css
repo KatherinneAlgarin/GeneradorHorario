@@ -516,3 +516,97 @@
   border-color: #ccc;
   color: #333;
 }
+
+/* --- UTILIDADES DE FORMULARIO Y MODALES --- */
+
+/* Para el textarea de descripción */
+.form-textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: inherit; /* Heredar fuente del sistema */
+  resize: vertical; /* Permitir cambiar tamaño solo verticalmente */
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-textarea:focus {
+  border-color: #DA2525;
+}
+
+/* Para elementos que ocupan todo el ancho (como la descripción) */
+.full-width {
+  width: 100%;
+  grid-column: 1 / -1; /* Si usas grid, esto hace que ocupe toda la fila */
+}
+
+/* Títulos y textos */
+.text-muted {
+  color: #555;
+}
+
+/* Cursores y selección */
+.cursor-pointer {
+  cursor: pointer;
+  user-select: none; /* Evita que se seleccione el texto al hacer clic rápido */
+}
+
+/* --- ESTILOS ESPECÍFICOS PARA FORMULARIOS --- */
+
+.form-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: white;
+  font-size: 0.95rem;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+  /* Appearance standard para browsers */
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right .7em top 50%;
+  background-size: .65em auto;
+}
+
+.form-select:focus {
+  border-color: #DA2525;
+}
+
+/* Utilidad para que ocupe todo el ancho disponible */
+.full-width {
+  width: 100%;
+  flex: 1 1 100%;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Crea columnas automáticas */
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  max-height: 150px; /* Scroll si hay muchos equipos */
+  overflow-y: auto;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+  user-select: none; /* Evita que se seleccione el texto al hacer clic */
+  transition: color 0.2s;
+}
+
+.checkbox-label:hover {
+  color: #DA2525;
+}

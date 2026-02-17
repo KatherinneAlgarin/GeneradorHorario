@@ -1,59 +1,138 @@
 import React, { useState, useEffect } from 'react';
 import Table from '../../components/common/Table';
 import SearchBar from '../../components/common/SearchBar';
-import ModalGeneral from '../../components/common/ModalGeneral';
+import ModalGeneral from '../../components/common/ModalGeneral'; 
 import { useMaterias } from '../../hooks/useMaterias';
 import '../../styles/AdminDashboard.css';
 
 const GestorMaterias = () => {
-  const { materias, searchTerm, setSearchTerm, modalState, openAddModal, openEditModal, closeModal, handleSaveMateria, deleteMateria, toggleStatus } = useMaterias();
+  const { 
+    materias, 
+    tiposAula, 
+    columns, 
+    searchTerm, setSearchTerm, 
+    modalState, 
+    openAddModal, openEditModal, closeModal, 
+    handleSaveMateria 
+  } = useMaterias();
+
   const [formData, setFormData] = useState(null);
 
-  useEffect(() => { if (modalState.isOpen) setFormData(modalState.data); }, [modalState]);
+  useEffect(() => {
+    if (modalState.isOpen) setFormData(modalState.data);
+  }, [modalState]);
 
-  const columns = [
-    { header: 'Código', accessor: 'codigo' },
-    { header: 'Asignatura', accessor: 'nombre' },
-    { header: 'UV', accessor: 'uv' },
-    { header: 'Tipo', accessor: 'tipo' },
-    { header: 'Estado', accessor: 'activo', render: (row) => (
-        <span className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'}`} onClick={() => toggleStatus(row.id_materia)} style={{cursor:'pointer'}}>
-          {row.activo ? 'Activo' : 'Inactivo'}
-        </span>
-      )}
-  ];
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)}>✏️</button>
-      <button className="btn-icon delete" onClick={() => deleteMateria(row.id_materia)}>🗑️</button>
+      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar Materia">✏️</button>
     </div>
   );
 
   return (
     <div className="tab-view-container">
-      <div className="page-header" style={{marginTop:'20px'}}>
-        <h3 style={{color:'#555'}}>Catálogo de Materias</h3>
+      {/* HEADER */}
+      <div className="page-header">
+        <h3 className="text-muted">Catálogo de Materias</h3>
         <button className="btn-primary" onClick={openAddModal}>+ Nueva Materia</button>
       </div>
-      <div className="filters-bar"><SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar materia..." /></div>
-      <Table columns={columns} data={materias} actions={renderActions} />
 
-      <ModalGeneral isOpen={modalState.isOpen} onClose={closeModal} title={modalState.type === 'add' ? 'Nueva Materia' : 'Editar Materia'} footer={<><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={() => handleSaveMateria(formData)}>Guardar</button></>}>
+      {/* FILTROS */}
+      <div className="filters-bar">
+        <SearchBar 
+          value={searchTerm} 
+          onChange={setSearchTerm} 
+          placeholder="Buscar por código, nombre o tipo de aula..." 
+        />
+      </div>
+
+      {/* TABLA */}
+      <Table 
+        columns={columns} 
+        data={materias} 
+        actions={renderActions} 
+      />
+
+      {/* MODAL */}
+      <ModalGeneral
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.type === 'add' ? 'Registrar Materia' : 'Editar Materia'}
+        footer={
+          <>
+            <button className="btn-cancel" onClick={closeModal}>Cancelar</button>
+            <button className="btn-save" onClick={() => handleSaveMateria(formData)}>Guardar</button>
+          </>
+        }
+      >
         {formData && (
           <>
+            {/* Campo 1: Código y Nombre */}
             <div className="form-row">
-              <div className="form-group-modal"><label>Código</label><input value={formData.codigo} onChange={e => setFormData({...formData, codigo: e.target.value})} placeholder="Ej. MAT101" /></div>
-              <div className="form-group-modal"><label>Nombre</label><input value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} /></div>
+              <div className="form-group-modal">
+                <label>Código</label>
+                <input 
+                  name="codigo" 
+                  value={formData.codigo} 
+                  onChange={handleChange} 
+                  placeholder="Ej. MAT101" 
+                />
+              </div>
+              <div className="form-group-modal">
+                <label>Nombre de la Materia</label>
+                <input 
+                  name="nombre" 
+                  value={formData.nombre} 
+                  onChange={handleChange} 
+                  placeholder="Ej. Matemática I" 
+                />
+              </div>
             </div>
+
             <div className="form-row">
-              <div className="form-group-modal"><label>Unidades Valorativas (UV)</label><input type="number" value={formData.uv} onChange={e => setFormData({...formData, uv: e.target.value})} /></div>
-              <div className="form-group-modal"><label>Tipo</label>
-                <select value={formData.tipo} onChange={e => setFormData({...formData, tipo: e.target.value})}>
-                  <option value="Teórica">Teórica</option>
-                  <option value="Práctica">Práctica</option>
-                  <option value="Laboratorio">Laboratorio</option>
+              <div className="form-group-modal full-width">
+                <label>Infraestructura Requerida</label>
+                <select 
+                  name="id_tipo_aula" 
+                  value={formData.id_tipo_aula} 
+                  onChange={handleChange}
+                  className="form-select"
+                >
+                  <option value="">-- Seleccione Tipo de Aula --</option>
+                  {tiposAula.map(tipo => (
+                    <option key={tipo.id_tipo} value={tipo.id_tipo}>
+                      {tipo.nombre}
+                    </option>
+                  ))}
                 </select>
+              </div>
+            </div>
+
+            {/* Campo 3: Horas */}
+            <div className="form-row">
+              <div className="form-group-modal">
+                <label>Horas Teóricas</label>
+                <input 
+                  type="number"
+                  name="horas_teoricas" 
+                  value={formData.horas_teoricas} 
+                  onChange={handleChange} 
+                  min="0"
+                />
+              </div>
+              <div className="form-group-modal">
+                <label>Horas Prácticas</label>
+                <input 
+                  type="number"
+                  name="horas_practicas" 
+                  value={formData.horas_practicas} 
+                  onChange={handleChange} 
+                  min="0"
+                />
               </div>
             </div>
           </>
@@ -62,4 +141,5 @@ const GestorMaterias = () => {
     </div>
   );
 };
+
 export default GestorMaterias;

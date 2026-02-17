@@ -6,6 +6,7 @@ import GestorDocentes from '../pages/admin/GestorDocentes';
 import OpcionTabs from '../pages/admin/OpcionTabs';
 import MainLayout from '../components/layout/MainLayout';
 import LoginLayout from '../components/layout/LoginLayout';
+import GestorInfraestructura from '../pages/admin/GestorInfraestructura';
 
 export const AppRouter = () => {
     return (
@@ -19,6 +20,7 @@ export const AppRouter = () => {
             <Route path="/admin" element={<MainLayout />}>
                 <Route index element={<HomeAdmin />} /> 
                 <Route path="docentes" element={<GestorDocentes />} />
+                <Route path="infraestructura" element={<GestorInfraestructura />} />
                 <Route path="academico" element={<OpcionTabs />} />
                 <Route path="horarios" element={<div>Próximamente: Horarios</div>} />
             </Route>

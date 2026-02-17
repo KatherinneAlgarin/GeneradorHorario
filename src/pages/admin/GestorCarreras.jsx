@@ -6,55 +6,113 @@ import { useCarreras } from '../../hooks/useCarreras';
 import '../../styles/AdminDashboard.css';
 
 const GestorCarreras = () => {
-  const { carreras, facultades, searchTerm, setSearchTerm, modalState, openAddModal, openEditModal, closeModal, handleSaveCarrera, deleteCarrera, toggleStatus } = useCarreras();
+  // 1. Obtenemos todo desde el Hook
+  const { 
+    carreras, 
+    facultades, 
+    columns, 
+    searchTerm, setSearchTerm, 
+    modalState, 
+    openAddModal, openEditModal, closeModal, 
+    handleSaveCarrera 
+  } = useCarreras();
+
+  // 2. Estado local para inputs
   const [formData, setFormData] = useState(null);
 
-  useEffect(() => { if (modalState.isOpen) setFormData(modalState.data); }, [modalState]);
+  useEffect(() => {
+    if (modalState.isOpen) setFormData(modalState.data);
+  }, [modalState]);
 
-  const columns = [
-    { header: 'Carrera', accessor: 'nombre' },
-    { 
-      header: 'Facultad', accessor: 'id_facultad',
-      render: (row) => facultades.find(f => f.id_facultad === row.id_facultad)?.nombre || 'N/A'
-    },
-    { header: 'Duración (Años)', accessor: 'duracion' },
-    { header: 'Estado', accessor: 'activo', render: (row) => (
-        <span className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'}`} onClick={() => toggleStatus(row.id_carrera)} style={{cursor:'pointer'}}>
-          {row.activo ? 'Activo' : 'Inactivo'}
-        </span>
-      )}
-  ];
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
+  // Acciones (Editar)
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)}>✏️</button>
-      <button className="btn-icon delete" onClick={() => deleteCarrera(row.id_carrera)}>🗑️</button>
+      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar Carrera">✏️</button>
     </div>
   );
 
   return (
     <div className="tab-view-container">
-      <div className="page-header" style={{marginTop:'20px'}}>
-        <h3 style={{color:'#555'}}>Carreras Universitarias</h3>
+      {/* HEADER */}
+      <div className="page-header">
+        <h3 className="text-muted">Carreras Universitarias</h3>
         <button className="btn-primary" onClick={openAddModal}>+ Nueva Carrera</button>
       </div>
-      <div className="filters-bar"><SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar carrera..." /></div>
-      <Table columns={columns} data={carreras} actions={renderActions} />
 
-      <ModalGeneral isOpen={modalState.isOpen} onClose={closeModal} title={modalState.type === 'add' ? 'Nueva Carrera' : 'Editar Carrera'} footer={<><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={() => handleSaveCarrera(formData)}>Guardar</button></>}>
+      {/* FILTROS */}
+      <div className="filters-bar">
+        <SearchBar 
+          value={searchTerm} 
+          onChange={setSearchTerm} 
+          placeholder="Buscar por código, nombre o facultad..." 
+        />
+      </div>
+
+      {/* TABLA */}
+      <Table 
+        columns={columns} 
+        data={carreras} 
+        actions={renderActions} 
+      />
+
+      {/* MODAL (Usando el nombre correcto: ModalGeneral) */}
+      <ModalGeneral
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.type === 'add' ? 'Registrar Carrera' : 'Editar Carrera'}
+        footer={
+          <>
+            <button className="btn-cancel" onClick={closeModal}>Cancelar</button>
+            <button className="btn-save" onClick={() => handleSaveCarrera(formData)}>Guardar</button>
+          </>
+        }
+      >
         {formData && (
           <>
+            {/* Campo 1: Facultad (Select) */}
             <div className="form-row">
-              <div className="form-group-modal"><label>Nombre Carrera</label><input value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} /></div>
-              <div className="form-group-modal"><label>Duración (Años)</label><input type="number" value={formData.duracion} onChange={e => setFormData({...formData, duracion: e.target.value})} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group-modal" style={{width:'100%'}}>
-                <label>Facultad</label>
-                <select value={formData.id_facultad} onChange={e => setFormData({...formData, id_facultad: e.target.value})}>
-                  <option value="">-- Seleccione --</option>
-                  {facultades.map(f => <option key={f.id_facultad} value={f.id_facultad}>{f.nombre}</option>)}
+              <div className="form-group-modal full-width">
+                <label>Facultad a la que pertenece</label>
+                <select 
+                  name="id_facultad" 
+                  value={formData.id_facultad} 
+                  onChange={handleChange}
+                  className="form-select"
+                >
+                  <option value="">-- Seleccione una Facultad --</option>
+                  {facultades.map(fac => (
+                    <option key={fac.id_facultad} value={fac.id_facultad}>
+                      {fac.nombre}
+                    </option>
+                  ))}
                 </select>
+              </div>
+            </div>
+
+            {/* Fila 2: Código y Nombre */}
+            <div className="form-row">
+              <div className="form-group-modal">
+                <label>Código Carrera</label>
+                <input 
+                  name="codigo" 
+                  value={formData.codigo} 
+                  onChange={handleChange} 
+                  placeholder="Ej. ICC" 
+                />
+              </div>
+              <div className="form-group-modal">
+                <label>Nombre Oficial</label>
+                <input 
+                  name="nombre" 
+                  value={formData.nombre} 
+                  onChange={handleChange} 
+                  placeholder="Ej. Ingeniería en Sistemas" 
+                />
               </div>
             </div>
           </>
@@ -63,4 +121,5 @@ const GestorCarreras = () => {
     </div>
   );
 };
+
 export default GestorCarreras;
