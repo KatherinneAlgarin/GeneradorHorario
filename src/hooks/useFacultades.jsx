@@ -1,59 +1,92 @@
-import React, { useState, useMemo } from 'react'; // Importamos React para poder usar JSX en las columnas
-
-
-const initialFacultades = [
-  { 
-    id_facultad: 'f1', 
-    codigo: 'ING', 
-    nombre: 'Facultad de Ingeniería', 
-    descripcion: 'Encargada de las carreras técnicas y tecnológicas.', 
-    activo: true 
-  },
-  { 
-    id_facultad: 'f2', 
-    codigo: 'MED', 
-    nombre: 'Facultad de Ciencias de la Salud', 
-    descripcion: 'Formación de profesionales en medicina y enfermería.', 
-    activo: true 
-  }
-];
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { apiRequest } from '../services/api';
 
 export const useFacultades = () => {
-  const [facultades, setFacultades] = useState(initialFacultades);
+  const [facultades, setFacultades] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
   
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'add',
-    data: null
+    data: { codigo: '', nombre: '', descripcion: '', activo: true }
   });
 
-  // --- ACCIONES ---
-  const toggleStatus = (id) => {
-    setFacultades(facultades.map(f => 
-      f.id_facultad === id ? { ...f, activo: !f.activo } : f
-    ));
+
+  const fetchFacultades = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiRequest('/facultades');
+      setFacultades(data);
+    } catch (error) {
+      console.error("Error al cargar facultades:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    fetchFacultades();
+  }, [fetchFacultades]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setModalState(prev => ({
+      ...prev,
+      data: { ...prev.data, [name]: value }
+    }));
   };
 
-  const deleteFacultad = (id) => {
-    if(window.confirm("¿Confirma eliminar esta facultad?")) {
-        setFacultades(facultades.filter(f => f.id_facultad !== id));
+
+  const handleSaveFacultad = async (formData) => {
+    if (!formData.codigo || !formData.nombre) {
+      return alert("Código y Nombre son obligatorios.");
+    }
+
+    try {
+      if (modalState.type === 'add') {
+        await apiRequest('/facultades', {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+      } else {
+        await apiRequest(`/facultades/${formData.id_facultad}`, {
+          method: 'PUT',
+          body: JSON.stringify(formData)
+        });
+      }
+      await fetchFacultades();
+      closeModal();
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      alert("Error al procesar la solicitud");
     }
   };
 
-  const handleSaveFacultad = (formData) => {
-    if (!formData.codigo || !formData.nombre || !formData.descripcion) {
-      return alert("Todos los campos son obligatorios.");
+  const deleteFacultad = async (id) => {
+    if (window.confirm("¿Confirma eliminar esta facultad?")) {
+      try {
+        await apiRequest(`/facultades/${id}`, { method: 'DELETE' });
+        await fetchFacultades();
+      } catch (error) {
+        console.error("Error al eliminar:", error);
+      }
     }
-
-    if (modalState.type === 'add') {
-      const newFacultad = { ...formData, id_facultad: crypto.randomUUID(), activo: true };
-      setFacultades([...facultades, newFacultad]);
-    } else {
-      setFacultades(facultades.map(f => f.id_facultad === formData.id_facultad ? formData : f));
-    }
-    closeModal();
   };
+
+  const toggleStatus = useCallback(async (id, currentStatus) => {
+    try {
+      await apiRequest(`/facultades/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ activo: !currentStatus })
+      });
+      await fetchFacultades();
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+    }
+  }, [fetchFacultades]);
+
 
   const columns = useMemo(() => [
     { header: 'Código', accessor: 'codigo' },
@@ -65,27 +98,25 @@ export const useFacultades = () => {
       render: (row) => (
         <span 
           className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'} cursor-pointer`}
-          onClick={() => toggleStatus(row.id_facultad)}
-          title="Clic para cambiar estado"
+          onClick={() => toggleStatus(row.id_facultad, row.activo)}
         >
           {row.activo ? 'Activo' : 'Inactivo'}
         </span>
       )
     }
-  ], [facultades]);
+  ], [toggleStatus]);
 
-  // --- FILTRADO ---
   const filteredFacultades = useMemo(() => {
-    if (!searchTerm) return facultades;
     const lower = searchTerm.toLowerCase();
     return facultades.filter(f => 
-      f.nombre.toLowerCase().includes(lower) || 
-      f.codigo.toLowerCase().includes(lower) ||
-      f.descripcion.toLowerCase().includes(lower)
+      f.nombre?.toLowerCase().includes(lower) || 
+      f.codigo?.toLowerCase().includes(lower) ||
+      f.descripcion?.toLowerCase().includes(lower)
     );
   }, [facultades, searchTerm]);
 
-  // --- MODALES ---
+
+  
   const openAddModal = () => {
     setModalState({ 
       isOpen: true, type: 'add', 
@@ -106,6 +137,8 @@ export const useFacultades = () => {
     modalState,
     openAddModal, openEditModal, closeModal,
     handleSaveFacultad,
-    deleteFacultad 
+    deleteFacultad,
+    handleInputChange,
+    loading
   };
 };

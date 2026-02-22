@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Table from '../../components/common/Table';
 import SearchBar from '../../components/common/SearchBar';
 import ModalGeneral from '../../components/common/ModalGeneral';
@@ -12,36 +12,30 @@ const GestorFacultades = () => {
     searchTerm, setSearchTerm, 
     modalState, 
     openAddModal, openEditModal, closeModal, 
-    handleSaveFacultad 
+    handleSaveFacultad,
+    handleInputChange,
+    deleteFacultad,
+    loading
   } = useFacultades();
 
-  const [formData, setFormData] = useState(null);
+  // Obtenemos los datos directamente del estado del modal en el hook
+  const formData = modalState.data;
 
-  useEffect(() => {
-    if (modalState.isOpen) setFormData(modalState.data);
-  }, [modalState]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Botón de acción (Editar)
+  // Acciones de la tabla
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar Información">✏️</button>
+      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar">✏️</button>
+      <button className="btn-icon delete" onClick={() => deleteFacultad(row.id_facultad)} title="Eliminar">🗑️</button>
     </div>
   );
 
   return (
     <div className="tab-view-container">
-      {/* HEADER */}
       <div className="page-header">
         <h3 className="text-muted">Facultades</h3>
         <button className="btn-primary" onClick={openAddModal}>+ Nueva Facultad</button>
       </div>
 
-      {/* FILTROS */}
       <div className="filters-bar">
         <SearchBar 
           value={searchTerm} 
@@ -50,14 +44,16 @@ const GestorFacultades = () => {
         />
       </div>
 
-      {/* TABLA (Columnas vienen del Hook) */}
-      <Table 
-        columns={columns} 
-        data={facultades} 
-        actions={renderActions} 
-      />
+      {loading ? (
+        <p>Cargando facultades...</p>
+      ) : (
+        <Table 
+          columns={columns} 
+          data={facultades} 
+          actions={renderActions} 
+        />
+      )}
 
-      {/* MODAL */}
       <ModalGeneral
         isOpen={modalState.isOpen}
         onClose={closeModal}
@@ -76,8 +72,8 @@ const GestorFacultades = () => {
                 <label>Código</label>
                 <input 
                   name="codigo"
-                  value={formData.codigo} 
-                  onChange={handleChange} 
+                  value={formData.codigo || ''} 
+                  onChange={handleInputChange} 
                   placeholder="Ej. ING" 
                 />
               </div>
@@ -85,8 +81,8 @@ const GestorFacultades = () => {
                 <label>Nombre de Facultad</label>
                 <input 
                   name="nombre"
-                  value={formData.nombre} 
-                  onChange={handleChange} 
+                  value={formData.nombre || ''} 
+                  onChange={handleInputChange} 
                   placeholder="Ej. Facultad de Ingeniería" 
                 />
               </div>
@@ -98,9 +94,9 @@ const GestorFacultades = () => {
                 <textarea 
                   name="descripcion"
                   className="form-textarea"
-                  value={formData.descripcion} 
-                  onChange={handleChange} 
-                  placeholder="Breve descripción de la facultad..."
+                  value={formData.descripcion || ''} 
+                  onChange={handleInputChange} 
+                  placeholder="Breve descripción..."
                 />
               </div>
             </div>
