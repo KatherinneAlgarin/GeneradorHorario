@@ -20,7 +20,13 @@ const GestorPlanes = () => {
 
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar Plan">✏️</button>
+      <button 
+        className="btn-text-edit" 
+        onClick={() => openEditModal(row)} 
+        title="Editar Plan"
+      >
+        Editar
+      </button>
     </div>
   );
 

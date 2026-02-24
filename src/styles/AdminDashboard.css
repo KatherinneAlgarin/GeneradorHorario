@@ -676,3 +676,47 @@
   font-size: 0.95rem;
   color: #333;
 }
+
+/* --- BOTÓN DE EDICIÓN (AZUL) --- */
+.btn-text-edit {
+  background-color: #f3f4f6;
+  color: #2563eb;
+  border: 1px solid #d1d5db;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-text-edit:hover {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* --- BOTÓN DE ELIMINACIÓN (ROJO) --- */
+.btn-text-delete {
+  background-color: #fff1f2;
+  color: #DA2525; /* Tu rojo institucional */
+  border: 1px solid #fecaca;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-text-delete:hover {
+  background-color: #DA2525;
+  color: white;
+  border-color: #DA2525;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}

@@ -11,14 +11,14 @@ const GestorInfraestructura = () => {
   const infrastructureTabs = [
     { id: 'aulas', label: 'Gestión de Aulas' },
     { id: 'tipos', label: 'Tipos de Aula' },
-    { id: 'equipamiento', label: 'Catálogo de Equipamiento' }
+    // { id: 'equipamiento', label: 'Catálogo de Equipamiento' }
   ];
 
   const renderContent = () => {
     switch (activeTab) {
       case 'aulas': return <GestorAulas />;
       case 'tipos': return <GestorTiposAula />;
-      case 'equipamiento': return <GestorEquipamiento />;
+      // case 'equipamiento': return <GestorEquipamiento />;
       default: return <GestorAulas />;
     }
   };

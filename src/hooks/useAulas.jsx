@@ -1,38 +1,23 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { apiRequest } from '../services/api';
 
-const MOCK_EQUIPOS = [
-  { id_equipamiento: 1, nombre: 'Proyector Multimedia' },
-  { id_equipamiento: 2, nombre: 'Aire Acondicionado' },
-  { id_equipamiento: 3, nombre: 'Pizarra Inteligente' },
-  { id_equipamiento: 4, nombre: 'Computadora Instructor' },
-  { id_equipamiento: 5, nombre: 'Escritorio Docente' }
-];
-
 export const useAulas = () => {
   const [aulas, setAulas] = useState([]);
   const [tipos, setTipos] = useState([]);
-  const [equipos, setEquipos] = useState(MOCK_EQUIPOS);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'add',
-    data: { nombre: '', edificio: '', ubicacion: 'Campus', capacidad: 30, id_tipo_aula: '', equipamiento_ids: [], activo: true }
-  });
-
-  const [equipModal, setEquipModal] = useState({
-    isOpen: false,
-    aulaNombre: '',
-    listaEquipos: []
+    data: { nombre: '', edificio: '', ubicacion: 'Campus', capacidad: 30, id_tipo_aula: '', activo: true }
   });
 
   const fetchAulas = useCallback(async () => {
     setLoading(true);
     try {
       const data = await apiRequest('/aulas');
-      setAulas(data);
+      setAulas(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al cargar aulas:", error);
     } finally {
@@ -43,67 +28,40 @@ export const useAulas = () => {
   const fetchTipos = useCallback(async () => {
     try {
       const data = await apiRequest('/tipos-aula');
-      setTipos(data);
+      setTipos(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error al cargar tipos de aula:", error);
-    }
-  }, []);
-
-  const fetchEquipos = useCallback(async () => {
-    try {
-      const data = await apiRequest('/equipamiento');
-      setEquipos(data);
-    } catch (error) {
-      console.error("Error al cargar equipamiento:", error);
     }
   }, []);
 
   useEffect(() => {
     fetchAulas();
     fetchTipos();
-    fetchEquipos();
-  }, [fetchAulas, fetchTipos, fetchEquipos]);
+  }, [fetchAulas, fetchTipos]);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const val = type === 'checkbox' ? checked : value;
-    
+    const { name, value } = e.target;
     setModalState(prev => ({
       ...prev,
-      data: { ...prev.data, [name]: val }
+      data: { ...prev.data, [name]: value }
     }));
   };
 
-  const openEquipamientoModal = (row) => {
-    const nombres = row.equipamiento_ids?.map(id => {
-        const eq = equipos.find(e => e.id_equipamiento === parseInt(id));
-        return eq ? eq.nombre : null;
-    }).filter(Boolean) || [];
 
-    setEquipModal({
-        isOpen: true,
-        aulaNombre: row.nombre,
-        listaEquipos: nombres
-    });
-  };
+  const toggleStatus = useCallback(async (id, currentStatus) => {
+    if (!currentStatus) return;
 
-  const closeEquipModal = () => setEquipModal({ isOpen: false, aulaNombre: '', listaEquipos: [] });
-
-  const toggleStatus = async (id) => {
-    const aula = aulas.find(a => a.id_aula === id);
-    if (!aula) return;
-    
-    const newStatus = !aula.activo;
-    try {
-      await apiRequest(`/aulas/actualizar/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ ...aula, activo: newStatus })
-      });
-      await fetchAulas();
-    } catch (error) {
-      console.error("Error al cambiar estado:", error);
+    if (window.confirm("¿Confirma dar de baja esta aula?")) {
+      try {
+        await apiRequest(`/aulas/desactivar/${id}`, { method: 'PUT' });
+        await fetchAulas();
+      } catch (error) {
+        console.error("Error al cambiar estado:", error);
+        alert("No se pudo cambiar el estado del aula");
+      }
     }
-  };
+  }, [fetchAulas]);
+
 
   const columns = useMemo(() => [
     { header: 'Aula', accessor: 'nombre' },
@@ -112,24 +70,8 @@ export const useAulas = () => {
     { header: 'Capacidad', accessor: 'capacidad' },
     { 
       header: 'Tipo', 
-      accessor: 'id_tipo_aula',
-      render: (row) => {
-        const tipoId = row.id_tipo_aula;
-        const tipo = tipos.find(t => t.id_tipo_aula == tipoId || t.id_tipo_aula === tipoId);
-        return tipo ? tipo.nombre : `(${tipoId})`;
-      }
-    },
-    { 
-      header: 'Equipamiento', 
-      accessor: 'equipamiento_ids',
-      render: (row) => (
-        <button 
-          className="btn-view-details"
-          onClick={() => openEquipamientoModal(row)}
-        >
-          Ver Detalle
-        </button>
-      )
+      accessor: 'tipo_aula',
+      render: (row) => row.tipo_aula?.nombre || '---'
     },
     { 
       header: 'Estado', 
@@ -137,39 +79,37 @@ export const useAulas = () => {
       render: (row) => (
         <span 
           className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'} cursor-pointer`}
-          onClick={() => toggleStatus(row.id_aula)}
+          onClick={() => toggleStatus(row.id_aula, row.activo)}
+          title={row.activo ? "Clic para dar de baja" : "Aula Inactiva"}
         >
           {row.activo ? 'Activo' : 'Inactivo'}
         </span>
       )
     }
-  ], [tipos, equipos]);
+  ], [toggleStatus]);
 
   const filteredAulas = useMemo(() => {
     if (!searchTerm) return aulas;
     const lower = searchTerm.toLowerCase();
     
-    return aulas.filter(a => {
-      const nombreTipo = tipos.find(t => t.id_tipo_aula == a.id_tipo_aula || t.id_tipo_aula === a.id_tipo_aula)?.nombre?.toLowerCase() || '';
-      return (
-        a.nombre?.toLowerCase().includes(lower) || 
-        a.edificio?.toLowerCase().includes(lower) ||
-        a.ubicacion?.toLowerCase().includes(lower) ||
-        nombreTipo.includes(lower)
-      );
-    });
-  }, [aulas, tipos, searchTerm]);
+    return aulas.filter(a => 
+      a.nombre?.toLowerCase().includes(lower) || 
+      a.edificio?.toLowerCase().includes(lower) ||
+      a.tipo_aula?.nombre?.toLowerCase().includes(lower)
+    );
+  }, [aulas, searchTerm]);
 
   const handleSaveAula = async (formData) => {
-    if (!formData.nombre || !formData.edificio || !formData.id_tipo_aula || !formData.capacidad || !formData.ubicacion) {
+    if (!formData.nombre || !formData.edificio || !formData.id_tipo_aula || !formData.capacidad) {
       return alert("Complete los campos obligatorios.");
     }
 
     const dataToSave = {
-      ...formData,
-      id_tipo_aula: parseInt(formData.id_tipo_aula),
+      nombre: formData.nombre,
+      edificio: formData.edificio,
+      ubicacion: formData.ubicacion,
       capacidad: parseInt(formData.capacidad),
-      equipamiento_ids: formData.equipamiento_ids ? formData.equipamiento_ids.map(id => parseInt(id)) : []
+      id_tipo_aula: formData.id_tipo_aula
     };
 
     try {
@@ -187,45 +127,37 @@ export const useAulas = () => {
       await fetchAulas();
       closeModal();
     } catch (error) {
-      console.error("Error al guardar:", error);
-      alert("Error al procesar la solicitud");
-    }
-  };
-
-  const deleteAula = async (id) => {
-    if (window.confirm("¿Confirma eliminar esta aula?")) {
-      try {
-        await apiRequest(`/aulas/${id}`, { method: 'DELETE' });
-        await fetchAulas();
-      } catch (error) {
-        console.error("Error al eliminar:", error);
-      }
+      alert(error.message || "Error al procesar la solicitud");
     }
   };
 
   const openAddModal = () => {
     setModalState({ 
-      isOpen: true, type: 'add', 
-      data: { nombre: '', edificio: '', ubicacion: 'Campus', capacidad: 30, id_tipo_aula: '', equipamiento_ids: [], activo: true } 
+      isOpen: true, 
+      type: 'add', 
+      data: { nombre: '', edificio: '', ubicacion: 'Campus', capacidad: 30, id_tipo_aula: '', activo: true } 
     });
   };
 
-  const openEditModal = (item) => setModalState({ isOpen: true, type: 'edit', data: { ...item } });
+  const openEditModal = (item) => {
+    setModalState({ 
+      isOpen: true, 
+      type: 'edit', 
+      data: { ...item } 
+    });
+  };
+
   const closeModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
 
   return {
     aulas: filteredAulas, 
     tipos,
-    equipos,
     columns,
     searchTerm, setSearchTerm,
     modalState,
-    equipModal,
     openAddModal, openEditModal, closeModal,
-    closeEquipModal,
     handleSaveAula,
     handleInputChange,
-    deleteAula,
     loading
   };
 };

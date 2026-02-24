@@ -113,7 +113,6 @@ const GestorDocentes = () => {
       );
     }
 
-    // CASO 2: FORMULARIO (Agregar / Editar)
     return (
       <>
         <div className="form-row">
@@ -149,7 +148,7 @@ const GestorDocentes = () => {
         <h2 style={{ color: '#333' }}>Gestión de Docentes</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
           
-          <BotonImportar onDataLoaded={handleImportDocentes} />
+          {/* <BotonImportar onDataLoaded={handleImportDocentes} /> */}
           
           <button className="btn-primary" onClick={openAddModal}>
             + Nuevo Docente

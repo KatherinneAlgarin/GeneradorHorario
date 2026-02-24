@@ -17,7 +17,13 @@ const GestorCarreras = () => {
 
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar">✏️</button>
+      <button 
+        className="btn-text-edit" 
+        onClick={() => openEditModal(row)} 
+        title="Editar Carrera"
+      >
+        Editar
+      </button>
     </div>
   );
 

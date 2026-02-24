@@ -17,11 +17,11 @@ const GestorFacultades = () => {
   const renderActions = (row) => (
     <div className="action-buttons">
       <button 
-        className="btn-icon edit" 
+        className="btn-text-edit" 
         onClick={() => openEditModal(row)} 
-        title="Editar"
+        title="Editar Facultad"
       >
-        ✏️
+        Editar
       </button>
     </div>
   );

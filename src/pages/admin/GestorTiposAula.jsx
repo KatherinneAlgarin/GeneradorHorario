@@ -22,8 +22,20 @@ const GestorTiposAula = () => {
 
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar Tipo">✏️</button>
-      <button className="btn-icon delete" onClick={() => deleteTipo(row.id_tipo_aula)} title="Eliminar">🗑️</button>
+      <button 
+        className="btn-text-edit" 
+        onClick={() => openEditModal(row)} 
+        title="Editar Tipo"
+      >
+        Editar
+      </button>
+      <button 
+        className="btn-text-delete" 
+        onClick={() => deleteTipo(row.id_tipo_aula)} 
+        title="Eliminar Tipo"
+      >
+        Eliminar
+      </button>
     </div>
   );
 

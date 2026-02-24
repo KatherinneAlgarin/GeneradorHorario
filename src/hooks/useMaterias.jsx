@@ -1,61 +1,58 @@
-import React, { useState, useMemo } from 'react';
-
-const mockTiposAula = [
-  { id_tipo: 1, nombre: 'Aula Teórica' },
-  { id_tipo: 2, nombre: 'Laboratorio de Cómputo' },
-  { id_tipo: 3, nombre: 'Laboratorio de Ciencias' },
-  { id_tipo: 4, nombre: 'Taller de Arquitectura' }
-];
-
-const initialMaterias = [
-  { 
-    id_materia: 1, 
-    codigo: 'MAT101', 
-    nombre: 'Matemática I', 
-    horas_teoricas: 3,
-    horas_practicas: 2,
-    id_tipo_aula: 1,
-    activo: true 
-  },
-  { 
-    id_materia: 2, 
-    codigo: 'PROG1', 
-    nombre: 'Programación Orientada a Objetos', 
-    horas_teoricas: 2,
-    horas_practicas: 4,
-    id_tipo_aula: 2, 
-    activo: true 
-  }
-];
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { apiRequest } from '../services/api';
 
 export const useMaterias = () => {
-  const [materias, setMaterias] = useState(initialMaterias);
-  const [tiposAula] = useState(mockTiposAula);
+  const [materias, setMaterias] = useState([]);
+  const [tiposAula, setTiposAula] = useState([]);
+  const [planes, setPlanes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
   
-  const [modalState, setModalState] = useState({
-    isOpen: false,
-    type: 'add',
-    data: null
+  const [modalState, setModalState] = useState({ 
+    isOpen: false, 
+    type: 'add', 
+    data: null 
   });
 
-  const toggleStatus = (id) => {
-    setMaterias(materias.map(m => 
-      m.id_materia === id ? { ...m, activo: !m.activo } : m
-    ));
-  };
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [m, t, p] = await Promise.all([
+        apiRequest('/asignaturas'),
+        apiRequest('/tipos-aula'),
+        apiRequest('/planes-estudio')
+      ]);
+      setMaterias(Array.isArray(m) ? m : []);
+      setTiposAula(Array.isArray(t) ? t : []);
+      setPlanes(Array.isArray(p) ? p : []);
+    } catch (error) {
+      console.error("Error al cargar datos:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // --- COLUMNAS ---
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const toggleStatus = useCallback(async (id, currentStatus) => {
+    if (!currentStatus) return;
+    if (window.confirm("¿Confirma dar de baja esta asignatura?")) {
+      try {
+        await apiRequest(`/asignaturas/desactivar/${id}`, { method: 'PUT' });
+        await fetchData();
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+  }, [fetchData]);
+
   const columns = useMemo(() => [
     { header: 'Código', accessor: 'codigo' },
     { header: 'Asignatura', accessor: 'nombre' },
     { 
       header: 'Req. Aula', 
-      accessor: 'id_tipo_aula',
-      render: (row) => {
-        const tipo = tiposAula.find(t => t.id_tipo === parseInt(row.id_tipo_aula));
-        return tipo ? tipo.nombre : '---';
-      }
+      accessor: 'requiere_tipo_aula',
+      render: (row) => row.tipo_aula?.nombre || '---'
     },
     { header: 'H. Teóricas', accessor: 'horas_teoricas' },
     { header: 'H. Prácticas', accessor: 'horas_practicas' },
@@ -65,86 +62,74 @@ export const useMaterias = () => {
       render: (row) => (
         <span 
           className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'} cursor-pointer`}
-          onClick={() => toggleStatus(row.id_materia)}
-          title="Clic para Activar/Desactivar"
+          onClick={() => toggleStatus(row.id_asignatura, row.activo)}
         >
           {row.activo ? 'Activo' : 'Inactivo'}
         </span>
       )
     }
-  ], [materias, tiposAula]);
+  ], [toggleStatus]);
 
-  // --- FILTRADO ---
   const filteredMaterias = useMemo(() => {
     if (!searchTerm) return materias;
     const lower = searchTerm.toLowerCase();
-    
-    return materias.filter(m => {
-      const nombreTipo = tiposAula.find(t => t.id_tipo === parseInt(m.id_tipo_aula))?.nombre.toLowerCase() || '';
-      return (
-        m.nombre.toLowerCase().includes(lower) || 
-        m.codigo.toLowerCase().includes(lower) ||
-        nombreTipo.includes(lower)
-      );
-    });
-  }, [materias, tiposAula, searchTerm]);
+    return materias.filter(m => 
+      m.nombre?.toLowerCase().includes(lower) || 
+      m.codigo?.toLowerCase().includes(lower) ||
+      m.tipo_aula?.nombre?.toLowerCase().includes(lower)
+    );
+  }, [materias, searchTerm]);
 
-  const handleSaveMateria = (formData) => {
-    // Validaciones
-    if (!formData.nombre || !formData.codigo || !formData.id_tipo_aula) {
-      return alert("Complete los campos obligatorios.");
+  const handleSaveMateria = async (formData) => {
+    if (!formData.nombre || !formData.codigo) {
+      return alert("Nombre y Código son obligatorios.");
     }
-    
-    if (formData.horas_teoricas < 0 || formData.horas_practicas < 0) {
-      return alert("Las horas no pueden ser negativas.");
+    try {
+      const payload = {
+        ...formData,
+        horas_teoricas: parseInt(formData.horas_teoricas) || 0,
+        horas_practicas: parseInt(formData.horas_practicas) || 0,
+        ciclo_recomendado: parseInt(formData.ciclo_recomendado) || 1
+      };
+      
+      const url = modalState.type === 'add' ? '/asignaturas' : `/asignaturas/actualizar/${formData.id_asignatura}`;
+      const method = modalState.type === 'add' ? 'POST' : 'PUT';
+      
+      await apiRequest(url, { method, body: JSON.stringify(payload) });
+      await fetchData();
+      closeModal();
+    } catch (error) {
+      alert(error.message);
     }
+  };
 
-    const dataToSave = {
-      ...formData,
-      id_tipo_aula: parseInt(formData.id_tipo_aula),
-      horas_teoricas: parseInt(formData.horas_teoricas) || 0,
-      horas_practicas: parseInt(formData.horas_practicas) || 0
+  const openAddModal = () => {
+    const initialData = { 
+      codigo: '', nombre: '', requiere_tipo_aula: '', 
+      horas_teoricas: 0, horas_practicas: 0, 
+      id_plan_estudio: '', ciclo_recomendado: 1 
+    };
+    setModalState({ isOpen: true, type: 'add', data: initialData });
+    return initialData;
+  };
+
+  const openEditModal = (item) => {
+    const planRelacion = item.plan_asignatura?.[0] || {};
+    const dataToEdit = { 
+      ...item, 
+      id_plan_estudio: planRelacion.id_plan_estudio || '',
+      ciclo_recomendado: planRelacion.ciclo_recomendado || 1
     };
 
-    if (modalState.type === 'add') {
-      const maxId = materias.length > 0 ? Math.max(...materias.map(m => m.id_materia)) : 0;
-      
-      const newMateria = { 
-        ...dataToSave, 
-        id_materia: maxId + 1,
-        activo: true 
-      };
-      setMaterias([...materias, newMateria]);
-    } else {
-      setMaterias(materias.map(m => m.id_materia === dataToSave.id_materia ? dataToSave : m));
-    }
-    closeModal();
+    setModalState({ isOpen: true, type: 'edit', data: dataToEdit });
+    return dataToEdit; 
   };
 
-  // --- GESTIÓN MODAL ---
-  const openAddModal = () => {
-    setModalState({ 
-      isOpen: true, 
-      type: 'add', 
-      data: { 
-        codigo: '', 
-        nombre: '', 
-        id_tipo_aula: '', 
-        horas_teoricas: 0, 
-        horas_practicas: 0, 
-        activo: true 
-      } 
-    });
-  };
-
-  const openEditModal = (item) => setModalState({ isOpen: true, type: 'edit', data: { ...item } });
   const closeModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
 
   return {
-    materias, tiposAula, columns,
-    searchTerm, setSearchTerm,
-    modalState,
-    openAddModal, openEditModal, closeModal,
-    handleSaveMateria
+    materias: filteredMaterias, tiposAula, planes, columns,
+    searchTerm, setSearchTerm, modalState, loading,
+    openAddModal, openEditModal, closeModal, handleSaveMateria
   };
 };

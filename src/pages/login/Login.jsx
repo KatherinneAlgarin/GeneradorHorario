@@ -159,12 +159,11 @@ export default function Login() {
             </button>
           </form>
           
-          {/* Ocultar el link si está cargando para evitar clics accidentales */}
-          {!isLoading && (
+          {/* {!isLoading && (
             <a href="#" className="forgot-password" onClick={(e) => { e.preventDefault(); changeView('forgot-email'); }}>
               ¿Olvidaste tu contraseña?
             </a>
-          )}
+          )} */}
         </>
       );
       break;
