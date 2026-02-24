@@ -14,6 +14,7 @@ const GestorCarreras = () => {
 
   const formData = modalState.data;
 
+
   const renderActions = (row) => (
     <div className="action-buttons">
       <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar">✏️</button>
@@ -103,20 +104,7 @@ const GestorCarreras = () => {
                 />
               </div>
             </div>
-
-            <div className="form-row">
-              <div className="form-group-modal checkbox-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <input 
-                    type="checkbox"
-                    name="activo"
-                    checked={formData.activo}
-                    onChange={handleInputChange}
-                  />
-                  <span>Carrera Activa</span>
-                </label>
-              </div>
-            </div>
+            
           </>
         )}
       </ModalGeneral>

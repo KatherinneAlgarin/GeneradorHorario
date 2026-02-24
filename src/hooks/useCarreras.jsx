@@ -43,6 +43,20 @@ export const useCarreras = () => {
     }));
   };
 
+
+  const toggleStatus = useCallback(async (id, currentStatus) => {
+    if (!currentStatus) return;
+
+    if (window.confirm("¿Confirma dar de baja esta carrera? No se podrá desactivar si tiene planes de estudio vigentes asociados.")) {
+      try {
+        await apiRequest(`/carreras/desactivar/${id}`, { method: 'PUT' });
+        await fetchData();
+      } catch (error) {
+        alert(error.message || "Error al intentar dar de baja la carrera");
+      }
+    }
+  }, [fetchData]);
+
   const handleSaveCarrera = async (formData) => {
     if (!formData.codigo || !formData.nombre || !formData.id_facultad) {
       return alert("Código, Nombre y Facultad son obligatorios.");
@@ -52,9 +66,8 @@ export const useCarreras = () => {
       const payload = {
         nombre: formData.nombre,
         codigo: formData.codigo,
-        descripcion: formData.descripcion,
-        id_facultad: formData.id_facultad,
-        activo: formData.activo
+        descripcion: formData.descripcion || "",
+        id_facultad: formData.id_facultad
       };
 
       if (modalState.type === 'add') {
@@ -71,7 +84,7 @@ export const useCarreras = () => {
       await fetchData();
       closeModal();
     } catch (error) {
-      error.message("Error al guardar la carrera");
+      alert(error.message || "Error al guardar la carrera");
     }
   };
 
@@ -83,17 +96,29 @@ export const useCarreras = () => {
       accessor: 'facultad', 
       render: (row) => row.facultad?.nombre || '---'
     },
-    { header: 'Descripción', accessor: 'descripcion' },
+    { 
+      header: 'Descripción', 
+      accessor: 'descripcion',
+      render: (row) => (
+        <div style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={row.descripcion}>
+          {row.descripcion || '---'}
+        </div>
+      )
+    },
     { 
       header: 'Estado', 
       accessor: 'activo',
       render: (row) => (
-        <span className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'}`}>
+        <span 
+          className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'} cursor-pointer`}
+          onClick={() => toggleStatus(row.id_carrera, row.activo)}
+          title={row.activo ? "Clic para dar de baja" : "Inactiva"}
+        >
           {row.activo ? 'Activo' : 'Inactivo'}
         </span>
       )
     }
-  ], []);
+  ], [toggleStatus]);
 
   const filteredCarreras = useMemo(() => {
     const lower = searchTerm.toLowerCase();

@@ -1,155 +1,175 @@
-import React, { useState, useMemo } from 'react';
-
-
-const mockCarreras = [
-  { id_carrera: 1, nombre: 'Ingeniería en Desarrollo de Software' },
-  { id_carrera: 2, nombre: 'Doctorado en Medicina' },
-  { id_carrera: 3, nombre: 'Licenciatura en Idiomas' }
-];
-
-
-const initialPlanes = [
-  { 
-    id_plan: 1, 
-    id_carrera: 1, 
-    nombre: 'Plan de Formación 2022', 
-    version: '1.0',
-    fecha_inicio: 2022, 
-    fecha_fin: 2027,  
-    activo: true 
-  },
-  { 
-    id_plan: 2, 
-    id_carrera: 2, 
-    nombre: 'Currícula Médica Reformada', 
-    version: '2.0',
-    fecha_inicio: 2018,
-    fecha_fin: 2023,
-    activo: false 
-  }
-];
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { apiRequest } from '../services/api';
 
 export const usePlanEstudio = () => {
-  const [planes, setPlanes] = useState(initialPlanes);
-  const [carreras] = useState(mockCarreras);
+  const [planes, setPlanes] = useState([]);
+  const [carreras, setCarreras] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
   
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'add',
-    data: null
+    data: { id_carrera: '', nombre: '', descripcion: '', fecha_inicio: '', fecha_fin: '', vigente: true }
   });
 
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [planesData, carrerasData] = await Promise.all([
+        apiRequest('/planes-estudio'),
+        apiRequest('/carreras')
+      ]);
+      
+      setPlanes(Array.isArray(planesData) ? planesData : []);
+      setCarreras(Array.isArray(carrerasData) ? carrerasData : []);
+    } catch (error) {
+      error("Error al cargar datos en Planes:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const toggleStatus = (id) => {
-    setPlanes(planes.map(p => 
-      p.id_plan === id ? { ...p, activo: !p.activo } : p
-    ));
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setModalState(prev => ({
+      ...prev,
+      data: { ...prev.data, [name]: value }
+    }));
   };
 
+  const toggleStatus = useCallback(async (id, currentStatus) => {
+    if (!currentStatus) return; 
+
+    if (window.confirm("¿Confirma dar de baja este plan de estudio?")) {
+      try {
+        await apiRequest(`/planes-estudio/desactivar/${id}`, { method: 'PUT' });
+        await fetchData();
+      } catch (error) {
+        alert(error.message || "Error al intentar dar de baja el plan");
+      }
+    }
+  }, [fetchData]);
+
+  const handleSavePlan = async (formData) => {
+    if (!formData.nombre || !formData.id_carrera) {
+      return alert("La carrera y el nombre son obligatorios.");
+    }
+
+    try {
+      const payload = {
+        id_carrera: formData.id_carrera,
+        nombre: formData.nombre,
+        descripcion: formData.descripcion || null,
+        fecha_inicio: formData.fecha_inicio ? `${formData.fecha_inicio}-01-01` : null,
+        fecha_fin: formData.fecha_fin ? `${formData.fecha_fin}-12-31` : null
+      };
+
+      if (modalState.type === 'add') {
+        await apiRequest('/planes-estudio', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await apiRequest(`/planes-estudio/actualizar/${formData.id_plan_estudio}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+      }
+      await fetchData();
+      closeModal();
+    } catch (error) {
+      alert(error.message || "Error al guardar el plan de estudio");
+    }
+  };
+
+  const getYearFromDate = (dateString) => {
+    if (!dateString) return '---';
+    return new Date(dateString).getFullYear();
+  };
 
   const columns = useMemo(() => [
     { header: 'Nombre del Plan', accessor: 'nombre' },
-    { header: 'Versión', accessor: 'version' },
     { 
       header: 'Carrera', 
-      accessor: 'id_carrera',
-      render: (row) => {
-        const carrera = carreras.find(c => c.id_carrera === parseInt(row.id_carrera));
-        return carrera ? carrera.nombre : '---';
-      }
+      accessor: 'carrera',
+      render: (row) => row.carrera?.nombre || '---'
     },
-    { header: 'Año Inicio', accessor: 'fecha_inicio' }, // Etiqueta visual "Año", variable "fecha"
-    { header: 'Año Fin', accessor: 'fecha_fin' },
+    { header: 'Descripción', accessor: 'descripcion' },
+    { 
+      header: 'Año Inicio', 
+      accessor: 'fecha_inicio',
+      render: (row) => getYearFromDate(row.fecha_inicio)
+    },
+    { 
+      header: 'Año Fin', 
+      accessor: 'fecha_fin',
+      render: (row) => getYearFromDate(row.fecha_fin)
+    },
     { 
       header: 'Estado', 
-      accessor: 'activo',
+      accessor: 'vigente',
       render: (row) => (
         <span 
-          className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'} cursor-pointer`}
-          onClick={() => toggleStatus(row.id_plan)}
-          title="Clic para Activar/Desactivar"
+          className={`status-badge ${row.vigente ? 'status-active' : 'status-inactive'} cursor-pointer`}
+          onClick={() => toggleStatus(row.id_plan_estudio, row.vigente)}
+          title={row.vigente ? "Clic para dar de baja" : "Inactivo"}
         >
-          {row.activo ? 'Activo' : 'Inactivo'}
+          {row.vigente ? 'Vigente' : 'Inactivo'}
         </span>
       )
     }
-  ], [planes, carreras]);
-
+  ], [toggleStatus]);
 
   const filteredPlanes = useMemo(() => {
     if (!searchTerm) return planes;
     const lower = searchTerm.toLowerCase();
     
-    return planes.filter(p => {
-      const nombreCarrera = carreras.find(c => c.id_carrera === parseInt(p.id_carrera))?.nombre.toLowerCase() || '';
-      return (
-        p.nombre.toLowerCase().includes(lower) || 
-        p.version.toLowerCase().includes(lower) ||
-        p.fecha_inicio.toString().includes(lower) || // Convertimos a string para buscar "2022"
-        nombreCarrera.includes(lower)
-      );
-    });
-  }, [planes, carreras, searchTerm]);
-
-
-  const handleSavePlan = (formData) => {
-      if (!formData.nombre || !formData.id_carrera || !formData.version || !formData.fecha_inicio || !formData.fecha_fin) {
-      return alert("Todos los campos son obligatorios.");
-    }
-
-
-    const inicio = parseInt(formData.fecha_inicio);
-    const fin = parseInt(formData.fecha_fin);
-
-    if (fin < inicio) {
-      return alert("El año de fin no puede ser menor al año de inicio.");
-    }
-
-    const dataToSave = {
-      ...formData,
-      id_carrera: parseInt(formData.id_carrera),
-      fecha_inicio: inicio,
-      fecha_fin: fin
-    };
-
-    if (modalState.type === 'add') {
-      const maxId = planes.length > 0 ? Math.max(...planes.map(p => p.id_plan)) : 0;
-      const newPlan = { 
-        ...dataToSave, 
-        id_plan: maxId + 1, 
-        activo: true 
-      };
-      setPlanes([...planes, newPlan]);
-    } else {
-      setPlanes(planes.map(p => p.id_plan === dataToSave.id_plan ? dataToSave : p));
-    }
-    closeModal();
-  };
+    return planes.filter(p => 
+      p.nombre?.toLowerCase().includes(lower) || 
+      p.carrera?.nombre?.toLowerCase().includes(lower) ||
+      getYearFromDate(p.fecha_inicio).toString().includes(lower)
+    );
+  }, [planes, searchTerm]);
 
   const openAddModal = () => {
     setModalState({ 
       isOpen: true, 
       type: 'add', 
       data: { 
-        nombre: '', 
-        version: '', 
         id_carrera: '', 
+        nombre: '', 
+        descripcion: '',
         fecha_inicio: new Date().getFullYear(), 
         fecha_fin: new Date().getFullYear() + 5, 
-        activo: true 
+        vigente: true 
       } 
     });
   };
 
-  const openEditModal = (item) => setModalState({ isOpen: true, type: 'edit', data: { ...item } });
+  const openEditModal = (item) => {
+    setModalState({ 
+      isOpen: true, 
+      type: 'edit', 
+      data: { 
+        ...item,
+        fecha_inicio: item.fecha_inicio ? new Date(item.fecha_inicio).getFullYear() : '',
+        fecha_fin: item.fecha_fin ? new Date(item.fecha_fin).getFullYear() : ''
+      } 
+    });
+  };
+  
   const closeModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
 
   return {
-    planes, carreras, columns,
-    searchTerm, setSearchTerm,
+    planes: filteredPlanes, carreras, columns,
+    searchTerm, setSearchTerm, loading,
     modalState,
     openAddModal, openEditModal, closeModal,
-    handleSavePlan
+    handleSavePlan, handleInputChange
   };
 };

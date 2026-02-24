@@ -9,15 +9,20 @@ const GestorFacultades = () => {
   const { 
     facultades, columns, searchTerm, setSearchTerm, 
     modalState, openAddModal, openEditModal, closeModal, 
-    handleSaveFacultad, handleInputChange, deleteFacultad, loading
+    handleSaveFacultad, handleInputChange, loading
   } = useFacultades();
 
   const formData = modalState.data;
 
   const renderActions = (row) => (
     <div className="action-buttons">
-      <button className="btn-icon edit" onClick={() => openEditModal(row)} title="Editar">✏️</button>
-      <button className="btn-icon delete" onClick={() => deleteFacultad(row.id_facultad)} title="Eliminar">🗑️</button>
+      <button 
+        className="btn-icon edit" 
+        onClick={() => openEditModal(row)} 
+        title="Editar"
+      >
+        ✏️
+      </button>
     </div>
   );
 
@@ -77,25 +82,6 @@ const GestorFacultades = () => {
                   onChange={handleInputChange} 
                   placeholder="Breve descripción..."
                 />
-              </div>
-            </div>
-
-            {/* NUEVO: Selector de Estado */}
-            <div className="form-row">
-              <div className="form-group-modal checkbox-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                  <input 
-                    type="checkbox"
-                    name="activo"
-                    checked={formData.activo}
-                    onChange={handleInputChange}
-                    style={{ width: '20px', height: '20px' }}
-                  />
-                  <span>Facultad Activa</span>
-                </label>
-                <p className="help-text" style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>
-                  Si se desactiva, los usuarios no podrán asignar nuevas carreras a esta facultad.
-                </p>
               </div>
             </div>
           </>

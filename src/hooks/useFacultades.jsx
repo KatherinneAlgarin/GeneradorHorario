@@ -9,7 +9,7 @@ export const useFacultades = () => {
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'add',
-    data: { nombre: '', descripcion: '', activo: true } // Quitamos codigo
+    data: { nombre: '', descripcion: '', activo: true }
   });
 
   const fetchFacultades = useCallback(async () => {
@@ -29,54 +29,49 @@ export const useFacultades = () => {
   }, [fetchFacultades]);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    // Si es un checkbox, usamos 'checked', de lo contrario 'value'
-    const val = type === 'checkbox' ? checked : value;
-    
+    const { name, value } = e.target;
     setModalState(prev => ({
       ...prev,
-      data: { ...prev.data, [name]: val }
+      data: { ...prev.data, [name]: value }
     }));
   };
 
-  const handleSaveFacultad = async (formData) => {
-    // Solo validamos nombre ahora
-    if (!formData.nombre) {
-      return alert("El nombre es obligatorio.");
+  // Función para Desactivar desde la tabla
+  const toggleStatus = useCallback(async (id, currentStatus) => {
+    if (!currentStatus) return;
+
+    if (window.confirm("¿Confirma dar de baja esta facultad? No se podrá desactivar si tiene carreras asociadas.")) {
+      try {
+        await apiRequest(`/facultades/desactivar/${id}`, { method: 'PUT' });
+        await fetchFacultades();
+      } catch (error) {
+        alert(error.message || "Error al intentar dar de baja");
+      }
     }
+  }, [fetchFacultades]);
+
+  const handleSaveFacultad = async (formData) => {
+    if (!formData.nombre) return alert("El nombre es obligatorio.");
 
     try {
       if (modalState.type === 'add') {
         await apiRequest('/facultades', {
           method: 'POST',
-          body: JSON.stringify(formData)
+          body: JSON.stringify({ nombre: formData.nombre, descripcion: formData.descripcion })
         });
       } else {
         await apiRequest(`/facultades/${formData.id_facultad}`, {
           method: 'PUT',
-          body: JSON.stringify(formData)
+          body: JSON.stringify({ nombre: formData.nombre, descripcion: formData.descripcion })
         });
       }
       await fetchFacultades();
       closeModal();
     } catch (error) {
-      console.error("Error al guardar:", error);
-      alert("Error al procesar la solicitud");
+      alert(error.message || "Error al procesar la solicitud");
     }
   };
 
-  const deleteFacultad = async (id) => {
-    if (window.confirm("¿Confirma eliminar esta facultad?")) {
-      try {
-        await apiRequest(`/facultades/${id}`, { method: 'DELETE' });
-        await fetchFacultades();
-      } catch (error) {
-        console.error("Error al eliminar:", error);
-      }
-    }
-  };
-
-  // Columnas simplificadas
   const columns = useMemo(() => [
     { header: 'Nombre Facultad', accessor: 'nombre' },
     { header: 'Descripción', accessor: 'descripcion' },
@@ -84,12 +79,16 @@ export const useFacultades = () => {
       header: 'Estado', 
       accessor: 'activo',
       render: (row) => (
-        <span className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'}`}>
+        <span 
+          className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'} cursor-pointer`}
+          onClick={() => toggleStatus(row.id_facultad, row.activo)}
+          title={row.activo ? "Clic para dar de baja" : "Inactiva"}
+        >
           {row.activo ? 'Activo' : 'Inactivo'}
         </span>
       )
     }
-  ], []); // Ya no depende de toggleStatus
+  ], [toggleStatus]);
 
   const filteredFacultades = useMemo(() => {
     const lower = searchTerm.toLowerCase();
@@ -119,7 +118,6 @@ export const useFacultades = () => {
     modalState,
     openAddModal, openEditModal, closeModal,
     handleSaveFacultad,
-    deleteFacultad,
     handleInputChange,
     loading
   };
