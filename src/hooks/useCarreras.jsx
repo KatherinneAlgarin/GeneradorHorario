@@ -7,6 +7,12 @@ export const useCarreras = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+  
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'add',
@@ -47,19 +53,33 @@ export const useCarreras = () => {
   const toggleStatus = useCallback(async (id, currentStatus) => {
     if (!currentStatus) return;
 
-    if (window.confirm("¿Confirma dar de baja esta carrera? No se podrá desactivar si tiene planes de estudio vigentes asociados.")) {
+    if (window.confirm("¿Confirma dar de baja esta carrera?")) {
       try {
         await apiRequest(`/carreras/desactivar/${id}`, { method: 'PUT' });
         await fetchData();
+        setNotification({
+          show: true,
+          message: "Carrera dada de baja exitosamente",
+          type: 'success'
+        });
       } catch (error) {
-        alert(error.message || "Error al intentar dar de baja la carrera");
+        setNotification({
+          show: true,
+          message: error.message,
+          type: 'error'
+        });
       }
     }
   }, [fetchData]);
 
   const handleSaveCarrera = async (formData) => {
     if (!formData.codigo || !formData.nombre || !formData.id_facultad) {
-      return alert("Código, Nombre y Facultad son obligatorios.");
+      setNotification({
+        show: true,
+        message: "Facultad, nombre y código son obligatorios.",
+        type: 'error'
+      });
+      return;
     }
 
     try {
@@ -75,17 +95,30 @@ export const useCarreras = () => {
           method: 'POST',
           body: JSON.stringify(payload)
         });
+        setNotification({
+          show: true,
+          message: "Carrera creada exitosamente",
+          type: 'success'
+        });
       } else {
         await apiRequest(`/carreras/actualizar/${formData.id_carrera}`, {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
+        setNotification({
+          show: true,
+          message: "Carrera actualizada exitosamente",
+          type: 'success'
+        });
       }
       await fetchData();
       closeModal();
     } catch (error) {
-      const msg = error.message || "Error al guardar la carrera";
-      alert(msg);
+      setNotification({
+        show: true,
+        message: error.message,
+        type: 'error'
+      });
     }
   };
 
@@ -152,6 +185,8 @@ export const useCarreras = () => {
     openAddModal, openEditModal, closeModal,
     handleSaveCarrera,
     handleInputChange,
-    loading
+    loading,
+    notification,
+    setNotification
   };
 };

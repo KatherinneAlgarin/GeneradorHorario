@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Table from '../../components/common/Table'; // Ajusta la ruta según tu estructura
 import SearchBar from '../../components/common/SearchBar';
-import ModalGeneral from '../../components/common/ModalGeneral'; 
+import ModalGeneral from '../../components/common/ModalGeneral';
+import Notification from '../../components/common/Notification';
 import { useEquipamiento } from '../../hooks/useEquipamiento';
 import '../../styles/AdminDashboard.css';
 
@@ -12,7 +13,9 @@ const GestorEquipamiento = () => {
     searchTerm, setSearchTerm, 
     modalState, 
     openAddModal, openEditModal, closeModal, 
-    handleSaveEquipamiento 
+    handleSaveEquipamiento,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   } = useEquipamiento();
 
   const [formData, setFormData] = useState(null);
@@ -49,6 +52,14 @@ const GestorEquipamiento = () => {
         />
       </div>
 
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
+        />
+      )}
+
       {/* TABLA */}
       <Table 
         columns={columns} 
@@ -68,6 +79,13 @@ const GestorEquipamiento = () => {
           </>
         }
       >
+        {notificationModal.show && modalState.isOpen && (
+          <Notification
+            message={notificationModal.message}
+            type={notificationModal.type}
+            onClose={() => setNotificationModal({ ...notificationModal, show: false })}
+          />
+        )}
         {formData && (
           <div className="form-row">
             <div className="form-group-modal full-width">

@@ -13,6 +13,18 @@ export const useAulas = () => {
     data: { nombre: '', edificio: '', ubicacion: 'Campus', capacidad: 30, id_tipo_aula: '', activo: true }
   });
 
+  const [notificationModal, setNotificationModal] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
   const fetchAulas = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,10 +66,21 @@ export const useAulas = () => {
     if (window.confirm("¿Confirma dar de baja esta aula?")) {
       try {
         await apiRequest(`/aulas/desactivar/${id}`, { method: 'PUT' });
+        setNotification({
+          show: true,
+          message: 'Aula desactivada correctamente',
+          type: 'success'
+        });
         await fetchAulas();
       } catch (error) {
-        console.error("Error al cambiar estado:", error);
-        alert("No se pudo cambiar el estado del aula");
+        if (error.statusCode >= 500) {
+          console.error("Error al cambiar estado:", error);
+        }
+        setNotification({
+          show: true,
+          message: error.message || "No se pudo cambiar el estado del aula",
+          type: 'error'
+        });
       }
     }
   }, [fetchAulas]);
@@ -101,7 +124,12 @@ export const useAulas = () => {
 
   const handleSaveAula = async (formData) => {
     if (!formData.nombre || !formData.edificio || !formData.id_tipo_aula || !formData.capacidad) {
-      return alert("Complete los campos obligatorios.");
+      setNotificationModal({
+        show: true,
+        message: "Complete los campos obligatorios.",
+        type: 'error'
+      });
+      return;
     }
 
     const dataToSave = {
@@ -124,11 +152,22 @@ export const useAulas = () => {
           body: JSON.stringify(dataToSave)
         });
       }
+      setNotificationModal({
+        show: true,
+        message: modalState.type === 'add' ? 'Aula creada correctamente' : 'Aula actualizada correctamente',
+        type: 'success'
+      });
       await fetchAulas();
-      closeModal();
+      setTimeout(() => closeModal(), 1500);
       } catch (error) {
-        const msg = error.message || "Error al procesar la solicitud";
-        alert(msg);
+        if (error.statusCode >= 500) {
+          console.error("Error al guardar aula:", error);
+        }
+        setNotificationModal({
+          show: true,
+          message: error.message || "Error al procesar la solicitud",
+          type: 'error'
+        });
       }
   };
 
@@ -159,6 +198,8 @@ export const useAulas = () => {
     openAddModal, openEditModal, closeModal,
     handleSaveAula,
     handleInputChange,
-    loading
+    loading,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   };
 };

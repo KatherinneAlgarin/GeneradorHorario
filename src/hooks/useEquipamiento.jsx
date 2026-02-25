@@ -18,10 +18,27 @@ export const useEquipamiento = () => {
     data: null
   });
 
+  const [notificationModal, setNotificationModal] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
   const toggleStatus = (id) => {
     setEquipos(equipos.map(e => 
       e.id_equipamiento === id ? { ...e, activo: !e.activo } : e
     ));
+    setNotification({
+      show: true,
+      message: 'Estado del equipo actualizado',
+      type: 'success'
+    });
   };
 
   const columns = useMemo(() => [
@@ -49,7 +66,12 @@ export const useEquipamiento = () => {
 
   const handleSaveEquipamiento = (formData) => {
     if (!formData.nombre || formData.nombre.trim() === "") {
-      return alert("El nombre del equipo es obligatorio.");
+      setNotificationModal({
+        show: true,
+        message: "El nombre del equipo es obligatorio.",
+        type: 'error'
+      });
+      return;
     }
 
     if (modalState.type === 'add') {
@@ -61,10 +83,20 @@ export const useEquipamiento = () => {
         activo: true 
       };
       setEquipos([...equipos, newEquipo]);
+      setNotificationModal({
+        show: true,
+        message: 'Equipo creado correctamente',
+        type: 'success'
+      });
     } else {
       setEquipos(equipos.map(e => e.id_equipamiento === formData.id_equipamiento ? formData : e));
+      setNotificationModal({
+        show: true,
+        message: 'Equipo actualizado correctamente',
+        type: 'success'
+      });
     }
-    closeModal();
+    setTimeout(() => closeModal(), 1500);
   };
 
   const openAddModal = () => {
@@ -87,6 +119,8 @@ export const useEquipamiento = () => {
     searchTerm, setSearchTerm,
     modalState,
     openAddModal, openEditModal, closeModal,
-    handleSaveEquipamiento
+    handleSaveEquipamiento,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   };
 };

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Table from '../../components/common/Table';
 import SearchBar from '../../components/common/SearchBar';
-import ModalGeneral from '../../components/common/ModalGeneral'; 
+import ModalGeneral from '../../components/common/ModalGeneral';
+import Notification from '../../components/common/Notification';
 import { useMaterias } from '../../hooks/useMaterias';
 import '../../styles/AdminDashboard.css';
 
@@ -11,7 +12,9 @@ const GestorMaterias = () => {
     searchTerm, setSearchTerm, 
     modalState, loading,
     openAddModal, openEditModal, closeModal, 
-    handleSaveMateria 
+    handleSaveMateria,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   } = useMaterias();
 
   const [formData, setFormData] = useState(null);
@@ -50,6 +53,14 @@ const GestorMaterias = () => {
         />
       </div>
 
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
+        />
+      )}
+
       {loading ? (
         <div className="loading-container">Cargando materias...</div>
       ) : (
@@ -67,6 +78,13 @@ const GestorMaterias = () => {
           </>
         }
       >
+        {notificationModal.show && modalState.isOpen && (
+          <Notification
+            message={notificationModal.message}
+            type={notificationModal.type}
+            onClose={() => setNotificationModal({ ...notificationModal, show: false })}
+          />
+        )}
         <div key={formData?.id_asignatura || 'nueva-materia'}>
           {formData && (
             <>

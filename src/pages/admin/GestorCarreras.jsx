@@ -2,6 +2,7 @@ import React from 'react';
 import Table from '../../components/common/Table';
 import SearchBar from '../../components/common/SearchBar';
 import ModalGeneral from '../../components/common/ModalGeneral';
+import Notification from '../../components/common/Notification';
 import { useCarreras } from '../../hooks/useCarreras';
 import '../../styles/AdminDashboard.css';
 
@@ -9,7 +10,8 @@ const GestorCarreras = () => {
   const { 
     carreras, facultades, columns, searchTerm, setSearchTerm, 
     modalState, openAddModal, openEditModal, closeModal, 
-    handleSaveCarrera, handleInputChange, loading
+    handleSaveCarrera, handleInputChange, loading,
+    notification, setNotification
   } = useCarreras();
 
   const formData = modalState.data;
@@ -42,6 +44,15 @@ const GestorCarreras = () => {
         />
       </div>
 
+      {notification.show && (
+        <Notification 
+          show={notification.show}
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
+        />
+      )}
+
       {loading ? (
         <p>Cargando información...</p>
       ) : (
@@ -59,6 +70,14 @@ const GestorCarreras = () => {
           </>
         }
       >
+        {modalState.isOpen && notification.show && (
+          <Notification 
+            show={notification.show}
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification({ ...notification, show: false })}
+          />
+        )}
         {formData && (
           <>
             <div className="form-row">

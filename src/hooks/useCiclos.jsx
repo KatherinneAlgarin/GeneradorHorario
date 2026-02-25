@@ -12,6 +12,18 @@ export const useCiclos = () => {
     data: { nombre: '', fecha_inicio: '', fecha_fin: '' }
   });
 
+  const [notificationModal, setNotificationModal] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
   const fetchCiclos = useCallback(async () => {
     setLoading(true);
     try {
@@ -37,8 +49,27 @@ export const useCiclos = () => {
   };
 
   const handleSaveCiclo = async (formData) => {
+    // Validar que los campos no estén vacíos
     if (!formData.nombre || !formData.fecha_inicio || !formData.fecha_fin) {
-      return alert("Todos los campos son obligatorios.");
+      setNotificationModal({
+        show: true,
+        message: "Nombre, fecha de inicio y fecha de fin son obligatorios",
+        type: 'error'
+      });
+      return;
+    }
+
+    // Validar que fecha_inicio < fecha_fin
+    const fechaInicio = new Date(formData.fecha_inicio);
+    const fechaFin = new Date(formData.fecha_fin);
+    
+    if (fechaInicio >= fechaFin) {
+      setNotificationModal({
+        show: true,
+        message: "La fecha de inicio debe ser anterior a la fecha de fin",
+        type: 'error'
+      });
+      return;
     }
 
     try {
@@ -53,11 +84,22 @@ export const useCiclos = () => {
           body: JSON.stringify(formData)
         });
       }
+      setNotificationModal({
+        show: true,
+        message: modalState.type === 'add' ? 'Ciclo creado correctamente' : 'Ciclo actualizado correctamente',
+        type: 'success'
+      });
       await fetchCiclos();
-      closeModal();
+      setTimeout(() => closeModal(), 1500);
     } catch (error) {
-      const msg = error.message || "Error al guardar el ciclo";
-      alert(msg);
+      if (error.statusCode >= 500) {
+        console.error("Error al guardar ciclo:", error);
+      }
+      setNotificationModal({
+        show: true,
+        message: error.message || "Error al guardar el ciclo",
+        type: 'error'
+      });
     }
   };
 
@@ -65,10 +107,21 @@ export const useCiclos = () => {
     if (window.confirm("¿Deseas establecer este ciclo como el único activo del sistema?")) {
       try {
         await apiRequest(`/ciclos/activar/${id}`, { method: 'PUT' });
+        setNotification({
+          show: true,
+          message: 'Ciclo activado correctamente',
+          type: 'success'
+        });
         await fetchCiclos();
       } catch (error) {
-        const msg = error.message || "Error al activar el ciclo";
-        alert(msg);
+        if (error.statusCode >= 500) {
+          console.error("Error al activar ciclo:", error);
+        }
+        setNotification({
+          show: true,
+          message: error.message || "Error al activar el ciclo",
+          type: 'error'
+        });
       }
     }
   };
@@ -124,6 +177,8 @@ export const useCiclos = () => {
     modalState,
     loading,
     openAddModal, openEditModal, closeModal,
-    handleSaveCiclo, handleInputChange, handleActivarCiclo
+    handleSaveCiclo, handleInputChange, handleActivarCiclo,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   };
 };

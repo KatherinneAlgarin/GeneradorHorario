@@ -12,6 +12,18 @@ export const useTiposAula = () => {
     data: { nombre: '', descripcion: '' }
   });
 
+  const [notificationModal, setNotificationModal] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
   const fetchTipos = useCallback(async () => {
     setLoading(true);
     try {
@@ -53,7 +65,12 @@ export const useTiposAula = () => {
 
   const handleSaveTipo = async (formData) => {
     if (!formData.nombre || formData.nombre.trim() === "") {
-      return alert("El nombre es obligatorio.");
+      setNotificationModal({
+        show: true,
+        message: "El nombre es obligatorio.",
+        type: 'error'
+      });
+      return;
     }
 
     try {
@@ -68,12 +85,22 @@ export const useTiposAula = () => {
           body: JSON.stringify(formData)
         });
       }
+      setNotificationModal({
+        show: true,
+        message: modalState.type === 'add' ? 'Tipo de aula creado correctamente' : 'Tipo de aula actualizado correctamente',
+        type: 'success'
+      });
       await fetchTipos();
-      closeModal();
+      setTimeout(() => closeModal(), 1500);
     } catch (error) {
-      console.error("Error al guardar:", error);
-      const msg = error.message || "Error al procesar la solicitud";
-      alert(msg);
+      if (error.statusCode >= 500) {
+        console.error("Error al guardar tipo de aula:", error);
+      }
+      setNotificationModal({
+        show: true,
+        message: error.message || "Error al procesar la solicitud",
+        type: 'error'
+      });
     }
   };
 
@@ -81,9 +108,21 @@ export const useTiposAula = () => {
     if (window.confirm("¿Confirma eliminar este tipo de aula?")) {
       try {
         await apiRequest(`/tipos-aula/eliminar/${id}`, { method: 'DELETE' });
+        setNotification({
+          show: true,
+          message: 'Tipo de aula eliminado correctamente',
+          type: 'success'
+        });
         await fetchTipos();
       } catch (error) {
-        console.error("Error al eliminar:", error);
+        if (error.statusCode >= 500) {
+          console.error("Error al eliminar tipo de aula:", error);
+        }
+        setNotification({
+          show: true,
+          message: error.message || 'Error al eliminar el tipo de aula',
+          type: 'error'
+        });
       }
     }
   };
@@ -111,6 +150,8 @@ export const useTiposAula = () => {
     handleSaveTipo,
     handleInputChange,
     deleteTipo,
-    loading
+    loading,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   };
 };

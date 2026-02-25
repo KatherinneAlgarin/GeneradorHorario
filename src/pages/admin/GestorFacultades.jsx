@@ -2,6 +2,7 @@ import React from 'react';
 import Table from '../../components/common/Table';
 import SearchBar from '../../components/common/SearchBar';
 import ModalGeneral from '../../components/common/ModalGeneral';
+import Notification from '../../components/common/Notification';
 import { useFacultades } from '../../hooks/useFacultades';
 import '../../styles/AdminDashboard.css';
 
@@ -9,7 +10,9 @@ const GestorFacultades = () => {
   const { 
     facultades, columns, searchTerm, setSearchTerm, 
     modalState, openAddModal, openEditModal, closeModal, 
-    handleSaveFacultad, handleInputChange, loading
+    handleSaveFacultad, handleInputChange, loading,
+    notification, setNotification,
+    notificationModal, setNotificationModal
   } = useFacultades();
 
   const formData = modalState.data;
@@ -41,6 +44,15 @@ const GestorFacultades = () => {
         />
       </div>
 
+      {notification.show && (
+        <Notification 
+          show={notification.show}
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
+        />
+      )}
+
       {loading ? (
         <p>Cargando facultades...</p>
       ) : (
@@ -58,6 +70,14 @@ const GestorFacultades = () => {
           </>
         }
       >
+        {modalState.isOpen && notificationModal.show && (
+          <Notification 
+            show={notificationModal.show}
+            message={notificationModal.message}
+            type={notificationModal.type}
+            onClose={() => setNotificationModal({ ...notificationModal, show: false })}
+          />
+        )}
         {formData && (
           <>
             <div className="form-row">

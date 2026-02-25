@@ -6,6 +6,18 @@ export const useFacultades = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   
+  const [notificationModal, setNotificationModal] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+  
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'add',
@@ -40,18 +52,34 @@ export const useFacultades = () => {
   const toggleStatus = useCallback(async (id, currentStatus) => {
     if (!currentStatus) return;
 
-    if (window.confirm("¿Confirma dar de baja esta facultad? No se podrá desactivar si tiene carreras asociadas.")) {
+    if (window.confirm("¿Confirma dar de baja esta facultad?")) {
       try {
         await apiRequest(`/facultades/desactivar/${id}`, { method: 'PUT' });
         await fetchFacultades();
+        setNotification({
+          show: true,
+          message: "Facultad dada de baja exitosamente",
+          type: 'success'
+        });
       } catch (error) {
-        alert(error.message || "Error al intentar dar de baja");
+        setNotification({
+          show: true,
+          message: error.message,
+          type: 'error'
+        });
       }
     }
   }, [fetchFacultades]);
 
   const handleSaveFacultad = async (formData) => {
-    if (!formData.nombre) return alert("El nombre es obligatorio.");
+    if (!formData.nombre) {
+      setNotificationModal({
+        show: true,
+        message: "El nombre es obligatorio.",
+        type: 'error'
+      });
+      return;
+    }
 
     try {
       if (modalState.type === 'add') {
@@ -59,17 +87,30 @@ export const useFacultades = () => {
           method: 'POST',
           body: JSON.stringify({ nombre: formData.nombre, descripcion: formData.descripcion })
         });
+        setNotificationModal({
+          show: true,
+          message: "Facultad creada exitosamente",
+          type: 'success'
+        });
       } else {
         await apiRequest(`/facultades/actualizar/${formData.id_facultad}`, {
           method: 'PUT',
           body: JSON.stringify({ nombre: formData.nombre, descripcion: formData.descripcion })
         });
+        setNotificationModal({
+          show: true,
+          message: "Facultad actualizada exitosamente",
+          type: 'success'
+        });
       }
       await fetchFacultades();
       closeModal();
     } catch (error) {
-      const msg = error.message || "Error al procesar la solicitud";
-      alert(msg);
+      setNotificationModal({
+        show: true,
+        message: error.message,
+        type: 'error'
+      });
     }
   };
 
@@ -120,6 +161,10 @@ export const useFacultades = () => {
     openAddModal, openEditModal, closeModal,
     handleSaveFacultad,
     handleInputChange,
-    loading
+    loading,
+    notification,
+    setNotification,
+    notificationModal,
+    setNotificationModal
   };
 };

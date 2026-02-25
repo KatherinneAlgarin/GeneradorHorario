@@ -1,7 +1,8 @@
 import React from 'react';
 import Table from '../../components/common/Table'; 
 import SearchBar from '../../components/common/SearchBar';
-import ModalGeneral from '../../components/common/ModalGeneral'; 
+import ModalGeneral from '../../components/common/ModalGeneral';
+import Notification from '../../components/common/Notification';
 import { useTiposAula } from '../../hooks/useTiposAula';
 import '../../styles/AdminDashboard.css';
 
@@ -15,7 +16,9 @@ const GestorTiposAula = () => {
     handleSaveTipo,
     handleInputChange,
     deleteTipo,
-    loading
+    loading,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   } = useTiposAula();
 
   const formData = modalState.data;
@@ -54,6 +57,14 @@ const GestorTiposAula = () => {
         />
       </div>
 
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
+        />
+      )}
+
       {loading ? (
         <p>Cargando tipos de aula...</p>
       ) : (
@@ -75,6 +86,13 @@ const GestorTiposAula = () => {
           </>
         }
       >
+        {notificationModal.show && modalState.isOpen && (
+          <Notification
+            message={notificationModal.message}
+            type={notificationModal.type}
+            onClose={() => setNotificationModal({ ...notificationModal, show: false })}
+          />
+        )}
         {formData && (
           <>
             <div className="form-row">

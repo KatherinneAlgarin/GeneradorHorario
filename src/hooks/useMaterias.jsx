@@ -15,6 +15,18 @@ export const useMaterias = () => {
     data: null 
   });
 
+  const [notificationModal, setNotificationModal] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -42,9 +54,21 @@ export const useMaterias = () => {
     if (window.confirm("¿Confirma dar de baja esta asignatura?")) {
       try {
         await apiRequest(`/asignaturas/desactivar/${id}`, { method: 'PUT' });
+        setNotification({
+          show: true,
+          message: 'Asignatura desactivada correctamente',
+          type: 'success'
+        });
         await fetchData();
       } catch (error) {
-        alert("Error: " + error.message);
+        if (error.statusCode >= 500) {
+          console.error("Error al desactivar asignatura:", error);
+        }
+        setNotification({
+          show: true,
+          message: error.message || 'Error al desactivar la asignatura',
+          type: 'error'
+        });
       }
     }
   }, [fetchData]);
@@ -85,7 +109,12 @@ export const useMaterias = () => {
 
   const handleSaveMateria = async (formData) => {
     if (!formData.nombre || !formData.codigo || !formData.id_plan_estudio || !formData.ciclo_recomendado) {
-      return alert("Todos los campos son obligatorios.");
+      setNotificationModal({
+        show: true,
+        message: 'Todos los campos son obligatorios.',
+        type: 'error'
+      });
+      return;
     }
     try {
       const payload = {
@@ -99,11 +128,22 @@ export const useMaterias = () => {
       const method = modalState.type === 'add' ? 'POST' : 'PUT';
       
       await apiRequest(url, { method, body: JSON.stringify(payload) });
+      setNotificationModal({
+        show: true,
+        message: modalState.type === 'add' ? 'Asignatura creada correctamente' : 'Asignatura actualizada correctamente',
+        type: 'success'
+      });
       await fetchData();
-      closeModal();
+      setTimeout(() => closeModal(), 1500);
       } catch (error) {
-      const msg = error.message || "Error al procesar la solicitud";
-      alert(msg);
+      if (error.statusCode >= 500) {
+        console.error("Error al guardar asignatura:", error);
+      }
+      setNotificationModal({
+        show: true,
+        message: error.message || "Error al procesar la solicitud",
+        type: 'error'
+      });
     }
   };
 
@@ -133,6 +173,8 @@ export const useMaterias = () => {
   return {
     materias: filteredMaterias, tiposAula, planes, ciclos, columns,
     searchTerm, setSearchTerm, modalState, loading,
-    openAddModal, openEditModal, closeModal, handleSaveMateria
+    openAddModal, openEditModal, closeModal, handleSaveMateria,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   };
 };

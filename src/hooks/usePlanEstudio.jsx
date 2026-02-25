@@ -7,6 +7,18 @@ export const usePlanEstudio = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   
+  const [notificationModal, setNotificationModal] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'error'
+  });
+  
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'add',
@@ -49,16 +61,29 @@ export const usePlanEstudio = () => {
       try {
         await apiRequest(`/planes-estudio/desactivar/${id}`, { method: 'PUT' });
         await fetchData();
+        setNotification({
+          show: true,
+          message: "Plan de estudio dado de baja exitosamente",
+          type: 'success'
+        });
       } catch (error) {
-        const msg = error.message || "Error al intentar dar de baja el plan";
-        alert(msg);
+        setNotification({
+          show: true,
+          message: error.message,
+          type: 'error'
+        });
       }
     }
   }, [fetchData]);
 
   const handleSavePlan = async (formData) => {
     if (!formData.nombre || !formData.id_carrera) {
-      return alert("La carrera y el nombre son obligatorios.");
+      setNotificationModal({
+        show: true,
+        message: "La carrera y el nombre son obligatorios.",
+        type: 'error'
+      });
+      return;
     }
 
     try {
@@ -75,17 +100,30 @@ export const usePlanEstudio = () => {
           method: 'POST',
           body: JSON.stringify(payload)
         });
+        setNotificationModal({
+          show: true,
+          message: "Plan de estudio creado exitosamente",
+          type: 'success'
+        });
       } else {
         await apiRequest(`/planes-estudio/actualizar/${formData.id_plan_estudio}`, {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
+        setNotificationModal({
+          show: true,
+          message: "Plan de estudio actualizado exitosamente",
+          type: 'success'
+        });
       }
       await fetchData();
       closeModal();
     } catch (error) {
-      const msg = error.message || "Error al guardar el plan de estudio";
-      alert(msg);
+      setNotificationModal({
+        show: true,
+        message: error.message,
+        type: 'error'
+      });
     }
   };
 
@@ -168,10 +206,21 @@ export const usePlanEstudio = () => {
   const closeModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
 
   return {
-    planes: filteredPlanes, carreras, columns,
-    searchTerm, setSearchTerm, loading,
+    planes: filteredPlanes, 
+    carreras, 
+    columns,
+    searchTerm, 
+    setSearchTerm, 
+    loading,
     modalState,
-    openAddModal, openEditModal, closeModal,
-    handleSavePlan, handleInputChange
+    openAddModal, 
+    openEditModal, 
+    closeModal,
+    handleSavePlan, 
+    handleInputChange,
+    notification,
+    setNotification,
+    notificationModal,
+    setNotificationModal
   };
 };

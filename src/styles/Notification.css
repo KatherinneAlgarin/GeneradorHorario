@@ -1,0 +1,138 @@
+/* --- NOTIFICACIONES INLINE (Debajo de la barra de búsqueda) --- */
+.notification-inline {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease-out;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- TIPO ERROR --- */
+.notification-inline-error {
+  background-color: #fee;
+  border-left: 4px solid #da2525;
+  color: #d32f2f;
+}
+
+.notification-inline-error .notification-inline-message {
+  color: #d32f2f;
+}
+
+.notification-inline-error .notification-inline-close {
+  color: #d32f2f;
+}
+
+.notification-inline-error .notification-inline-close:hover {
+  background-color: rgba(211, 47, 47, 0.1);
+}
+
+/* --- TIPO ÉXITO/SUCCESS --- */
+.notification-inline-success {
+  background-color: #efe;
+  border-left: 4px solid #4caf50;
+  color: #2e7d32;
+}
+
+.notification-inline-success .notification-inline-message {
+  color: #2e7d32;
+}
+
+.notification-inline-success .notification-inline-close {
+  color: #2e7d32;
+}
+
+.notification-inline-success .notification-inline-close:hover {
+  background-color: rgba(46, 125, 50, 0.1);
+}
+
+/* --- TIPO ADVERTENCIA --- */
+.notification-inline-warning {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  color: #856404;
+}
+
+.notification-inline-warning .notification-inline-message {
+  color: #856404;
+}
+
+.notification-inline-warning .notification-inline-close {
+  color: #856404;
+}
+
+.notification-inline-warning .notification-inline-close:hover {
+  background-color: rgba(133, 100, 4, 0.1);
+}
+
+/* --- TIPO INFO --- */
+.notification-inline-info {
+  background-color: #d1ecf1;
+  border-left: 4px solid #17a2b8;
+  color: #0c5460;
+}
+
+.notification-inline-info .notification-inline-message {
+  color: #0c5460;
+}
+
+.notification-inline-info .notification-inline-close {
+  color: #0c5460;
+}
+
+.notification-inline-info .notification-inline-close:hover {
+  background-color: rgba(12, 84, 96, 0.1);
+}
+
+/* --- CONTENIDO --- */
+.notification-inline-message {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  flex: 1;
+}
+
+/* --- BOTÓN CERRAR --- */
+.notification-inline-close {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .notification-inline {
+    padding: 12px 14px;
+    margin-top: 10px;
+  }
+
+  .notification-inline-message {
+    font-size: 0.9rem;
+  }
+}

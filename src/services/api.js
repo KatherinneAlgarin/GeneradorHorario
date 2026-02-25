@@ -13,12 +13,19 @@ export const apiRequest = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      throw new Error(errorBody.mensaje || `Error: ${response.status}`);
+      const error = new Error(errorBody.error || `Error: ${response.status}`);
+      error.statusCode = response.status;
+      error.isBusinessError = true;
+      throw error;
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error en la conexión con la API:", error.message);
+    //  errores de conexión o técnicos
+    // Los errores de negocio se manejan en los hooks
+    if (!error.isBusinessError) {
+      console.error("Error en la conexión con la API:");
+    }
     throw error;
   }
 };

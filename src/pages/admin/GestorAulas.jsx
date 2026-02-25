@@ -1,7 +1,8 @@
 import React from 'react';
 import Table from '../../components/common/Table';
 import SearchBar from '../../components/common/SearchBar';
-import ModalGeneral from '../../components/common/ModalGeneral'; 
+import ModalGeneral from '../../components/common/ModalGeneral';
+import Notification from '../../components/common/Notification';
 import { useAulas } from '../../hooks/useAulas';
 import '../../styles/AdminDashboard.css';
 
@@ -15,7 +16,9 @@ const GestorAulas = () => {
     openAddModal, openEditModal, closeModal, 
     handleSaveAula,
     handleInputChange,
-    loading
+    loading,
+    notificationModal, setNotificationModal,
+    notification, setNotification
   } = useAulas();
 
   const formData = modalState.data;
@@ -47,6 +50,14 @@ const GestorAulas = () => {
         />
       </div>
 
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ ...notification, show: false })}
+        />
+      )}
+
       {loading ? (
         <div className="loading-container">Cargando aulas...</div>
       ) : (
@@ -68,6 +79,13 @@ const GestorAulas = () => {
           </>
         }
       >
+        {notificationModal.show && modalState.isOpen && (
+          <Notification
+            message={notificationModal.message}
+            type={notificationModal.type}
+            onClose={() => setNotificationModal({ ...notificationModal, show: false })}
+          />
+        )}
         {formData && (
           <>
             <div className="form-row">
