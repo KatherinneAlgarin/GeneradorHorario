@@ -126,9 +126,10 @@ export const useAulas = () => {
       }
       await fetchAulas();
       closeModal();
-    } catch (error) {
-      alert(error.message || "Error al procesar la solicitud");
-    }
+      } catch (error) {
+        const msg = error.message || "Error al procesar la solicitud";
+        alert(msg);
+      }
   };
 
   const openAddModal = () => {

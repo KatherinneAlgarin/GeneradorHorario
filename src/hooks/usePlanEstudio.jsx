@@ -50,7 +50,8 @@ export const usePlanEstudio = () => {
         await apiRequest(`/planes-estudio/desactivar/${id}`, { method: 'PUT' });
         await fetchData();
       } catch (error) {
-        alert(error.message || "Error al intentar dar de baja el plan");
+        const msg = error.message || "Error al intentar dar de baja el plan";
+        alert(msg);
       }
     }
   }, [fetchData]);
@@ -83,7 +84,8 @@ export const usePlanEstudio = () => {
       await fetchData();
       closeModal();
     } catch (error) {
-      alert(error.message || "Error al guardar el plan de estudio");
+      const msg = error.message || "Error al guardar el plan de estudio";
+      alert(msg);
     }
   };
 

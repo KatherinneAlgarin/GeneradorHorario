@@ -132,6 +132,7 @@ export default function Login() {
         <>
           <h1 className="login-title">Gestor de Horarios</h1>
           <form onSubmit={handleLogin}>
+            {error && <div className="error-message">{error}</div>}
             <div className="form-group">
               <label>Correo electrónico</label>
               <input 
@@ -158,12 +159,6 @@ export default function Login() {
               {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
             </button>
           </form>
-          
-          {/* {!isLoading && (
-            <a href="#" className="forgot-password" onClick={(e) => { e.preventDefault(); changeView('forgot-email'); }}>
-              ¿Olvidaste tu contraseña?
-            </a>
-          )} */}
         </>
       );
       break;

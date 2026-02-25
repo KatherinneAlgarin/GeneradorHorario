@@ -76,7 +76,7 @@ export const useCarreras = () => {
           body: JSON.stringify(payload)
         });
       } else {
-        await apiRequest(`/carreras/${formData.id_carrera}`, {
+        await apiRequest(`/carreras/actualizar/${formData.id_carrera}`, {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
@@ -84,7 +84,8 @@ export const useCarreras = () => {
       await fetchData();
       closeModal();
     } catch (error) {
-      alert(error.message || "Error al guardar la carrera");
+      const msg = error.message || "Error al guardar la carrera";
+      alert(msg);
     }
   };
 

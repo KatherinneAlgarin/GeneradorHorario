@@ -72,7 +72,8 @@ export const useTiposAula = () => {
       closeModal();
     } catch (error) {
       console.error("Error al guardar:", error);
-      alert("Error al procesar la solicitud");
+      const msg = error.message || "Error al procesar la solicitud";
+      alert(msg);
     }
   };
 

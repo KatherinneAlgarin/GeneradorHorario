@@ -60,7 +60,7 @@ export const useFacultades = () => {
           body: JSON.stringify({ nombre: formData.nombre, descripcion: formData.descripcion })
         });
       } else {
-        await apiRequest(`/facultades/${formData.id_facultad}`, {
+        await apiRequest(`/facultades/actualizar/${formData.id_facultad}`, {
           method: 'PUT',
           body: JSON.stringify({ nombre: formData.nombre, descripcion: formData.descripcion })
         });
@@ -68,7 +68,8 @@ export const useFacultades = () => {
       await fetchFacultades();
       closeModal();
     } catch (error) {
-      alert(error.message || "Error al procesar la solicitud");
+      const msg = error.message || "Error al procesar la solicitud";
+      alert(msg);
     }
   };
 

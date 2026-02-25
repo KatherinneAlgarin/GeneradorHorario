@@ -101,8 +101,9 @@ export const useMaterias = () => {
       await apiRequest(url, { method, body: JSON.stringify(payload) });
       await fetchData();
       closeModal();
-    } catch (error) {
-      alert(error.message);
+      } catch (error) {
+      const msg = error.message || "Error al procesar la solicitud";
+      alert(msg);
     }
   };
 

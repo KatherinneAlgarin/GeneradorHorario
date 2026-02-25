@@ -56,7 +56,8 @@ export const useCiclos = () => {
       await fetchCiclos();
       closeModal();
     } catch (error) {
-      alert(error.message || "Error al guardar el ciclo");
+      const msg = error.message || "Error al guardar el ciclo";
+      alert(msg);
     }
   };
 
@@ -66,7 +67,8 @@ export const useCiclos = () => {
         await apiRequest(`/ciclos/activar/${id}`, { method: 'PUT' });
         await fetchCiclos();
       } catch (error) {
-        alert(error.message || "Error al activar el ciclo");
+        const msg = error.message || "Error al activar el ciclo";
+        alert(msg);
       }
     }
   };
