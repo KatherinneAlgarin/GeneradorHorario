@@ -36,7 +36,7 @@ export const usePlanEstudio = () => {
       setPlanes(Array.isArray(planesData) ? planesData : []);
       setCarreras(Array.isArray(carrerasData) ? carrerasData : []);
     } catch (error) {
-      error("Error al cargar datos en Planes:", error);
+      console.error("Error al cargar datos en Planes:", error);
     } finally {
       setLoading(false);
     }
@@ -60,16 +60,19 @@ export const usePlanEstudio = () => {
     if (window.confirm("¿Confirma dar de baja este plan de estudio?")) {
       try {
         await apiRequest(`/planes-estudio/desactivar/${id}`, { method: 'PUT' });
-        await fetchData();
         setNotification({
           show: true,
           message: "Plan de estudio dado de baja exitosamente",
           type: 'success'
         });
+        await fetchData();
       } catch (error) {
+        if (error.statusCode >= 500) {
+          console.error("Error al desactivar plan de estudio:", error);
+        }
         setNotification({
           show: true,
-          message: error.message,
+          message: error.message || "Error al dar de baja el plan de estudio",
           type: 'error'
         });
       }
@@ -77,13 +80,29 @@ export const usePlanEstudio = () => {
   }, [fetchData]);
 
   const handleSavePlan = async (formData) => {
+    // Validar campos obligatorios
     if (!formData.nombre || !formData.id_carrera) {
       setNotificationModal({
         show: true,
-        message: "La carrera y el nombre son obligatorios.",
+        message: "La carrera y el nombre son obligatorios",
         type: 'error'
       });
       return;
+    }
+
+    // Validar que año_inicio < año_fin (si ambos están presentes)
+    if (formData.fecha_inicio && formData.fecha_fin) {
+      const yearInicio = parseInt(formData.fecha_inicio);
+      const yearFin = parseInt(formData.fecha_fin);
+      
+      if (yearInicio >= yearFin) {
+        setNotificationModal({
+          show: true,
+          message: "El año de inicio debe ser anterior al año de fin",
+          type: 'error'
+        });
+        return;
+      }
     }
 
     try {
@@ -91,8 +110,9 @@ export const usePlanEstudio = () => {
         id_carrera: formData.id_carrera,
         nombre: formData.nombre,
         descripcion: formData.descripcion || null,
-        fecha_inicio: formData.fecha_inicio ? `${formData.fecha_inicio}-01-01` : null,
-        fecha_fin: formData.fecha_fin ? `${formData.fecha_fin}-12-31` : null
+        fecha_inicio: formData.fecha_inicio ? new Date(`${formData.fecha_inicio}-01-01`) : null,
+        fecha_fin: formData.fecha_fin ? new Date(`${formData.fecha_fin}-12-31`) : null,
+        vigente: formData.vigente !== undefined ? formData.vigente : true
       };
 
       if (modalState.type === 'add') {
@@ -117,11 +137,14 @@ export const usePlanEstudio = () => {
         });
       }
       await fetchData();
-      closeModal();
+      setTimeout(() => closeModal(), 1500);
     } catch (error) {
+      if (error.statusCode >= 500) {
+        console.error("Error al guardar plan de estudio:", error);
+      }
       setNotificationModal({
         show: true,
-        message: error.message,
+        message: error.message || "Error al procesar la solicitud",
         type: 'error'
       });
     }

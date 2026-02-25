@@ -19,7 +19,18 @@ const GestorPlanes = () => {
     notificationModal, setNotificationModal
   } = usePlanEstudio();
 
-  const formData = modalState.data;
+  const [formData, setFormData] = React.useState(null);
+
+  React.useEffect(() => {
+    if (modalState.isOpen) {
+      setFormData(modalState.data);
+    }
+  }, [modalState]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const renderActions = (row) => (
     <div className="action-buttons">
@@ -87,12 +98,12 @@ const GestorPlanes = () => {
             <div className="form-row">
               <div className="form-group-modal full-width">
                 <label>Carrera Asociada</label>
-                <select
-                  name="id_carrera"
-                  value={formData.id_carrera || ''}
-                  onChange={handleInputChange}
-                  className="form-select"
-                >
+                 <select
+                   name="id_carrera"
+                   value={formData.id_carrera || ''}
+                   onChange={handleChange}
+                   className="form-select"
+                 >
                   <option value="">-- Seleccione una Carrera --</option>
                   {carreras.length > 0 ? (
                     carreras.map(car => (
@@ -110,52 +121,52 @@ const GestorPlanes = () => {
             <div className="form-row">
               <div className="form-group-modal full-width">
                 <label>Nombre del Plan</label>
-                <input
-                  name="nombre"
-                  value={formData.nombre || ''}
-                  onChange={handleInputChange}
-                  placeholder="Ej. Plan de Formación 2024"
-                />
+                 <input
+                   name="nombre"
+                   value={formData.nombre || ''}
+                   onChange={handleChange}
+                   placeholder="Ej. Plan de Formación 2024"
+                 />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group-modal full-width">
                 <label>Descripción (Opcional)</label>
-                <textarea
-                  name="descripcion"
-                  className="form-textarea"
-                  value={formData.descripcion || ''}
-                  onChange={handleInputChange}
-                  placeholder="Breve descripción del plan..."
-                />
+                 <textarea
+                   name="descripcion"
+                   className="form-textarea"
+                   value={formData.descripcion || ''}
+                   onChange={handleChange}
+                   placeholder="Breve descripción del plan..."
+                 />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group-modal">
                 <label>Año de Inicio</label>
-                <input
-                  type="number"
-                  name="fecha_inicio"
-                  value={formData.fecha_inicio || ''}
-                  onChange={handleInputChange}
-                  placeholder="Ej. 2024"
-                  min="2000"
-                  max="2100"
-                />
+                 <input
+                   type="number"
+                   name="fecha_inicio"
+                   value={formData.fecha_inicio || ''}
+                   onChange={handleChange}
+                   placeholder="Ej. 2024"
+                   min="2000"
+                   max="2100"
+                 />
               </div>
               <div className="form-group-modal">
                 <label>Año de Fin</label>
-                <input
-                  type="number"
-                  name="fecha_fin"
-                  value={formData.fecha_fin || ''}
-                  onChange={handleInputChange}
-                  placeholder="Ej. 2029"
-                  min="2000"
-                  max="2100"
-                />
+                 <input
+                   type="number"
+                   name="fecha_fin"
+                   value={formData.fecha_fin || ''}
+                   onChange={handleChange}
+                   placeholder="Ej. 2029"
+                   min="2000"
+                   max="2100"
+                 />
               </div>
             </div>
           </>
