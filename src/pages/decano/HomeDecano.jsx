@@ -1,3 +1,3 @@
 export default function HomeDecano() {
-  return <h1>Bienvenido Decano 👔</h1>;
+  return <h1>Perfil decano</h1>;
 }

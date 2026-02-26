@@ -14,15 +14,11 @@ export const useAulas = () => {
   });
 
   const [notificationModal, setNotificationModal] = useState({
-    show: false,
-    message: '',
-    type: 'error'
+    show: false, message: '', type: 'error'
   });
 
   const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: 'error'
+    show: false, message: '', type: 'error'
   });
 
   const fetchAulas = useCallback(async () => {
@@ -33,9 +29,7 @@ export const useAulas = () => {
     } catch (error) {
       console.error("Error al cargar aulas:", error);
       setNotification({
-        show: true,
-        message: "Error de conexión al cargar las aulas.",
-        type: 'error'
+        show: true, message: "Error de conexión al cargar las aulas.", type: 'error'
       });
     } finally {
       setLoading(false);
@@ -64,30 +58,39 @@ export const useAulas = () => {
     }));
   };
 
-  const toggleStatus = useCallback(async (id, currentStatus) => {
-    if (!currentStatus) return;
+  const toggleStatus = useCallback((id, currentStatus, nombre) => {
+    setNotificationModal({ show: false, message: '', type: 'error' });
+    setModalState({
+      isOpen: true,
+      type: 'confirmToggle',
+      data: { id_aula: id, activo: currentStatus, nombre: nombre }
+    });
+  }, []);
 
-    if (window.confirm("¿Confirma dar de baja esta aula?")) {
-      try {
-        await apiRequest(`/aulas/desactivar/${id}`, { method: 'PUT' });
-        setNotification({
-          show: true,
-          message: 'Aula desactivada correctamente',
-          type: 'success'
-        });
-        await fetchAulas();
-      } catch (error) {
-        if (error.statusCode >= 500) {
-          console.error("Error al cambiar estado:", error);
-        }
-        setNotification({
-          show: true,
-          message: error.message || "No se pudo cambiar el estado del aula",
-          type: 'error'
-        });
+  const executeToggleStatus = async () => {
+    const { id_aula, activo } = modalState.data;
+    const endpoint = activo ? `/aulas/desactivar/${id_aula}` : `/aulas/activar/${id_aula}`;
+    
+    try {
+      await apiRequest(endpoint, { method: 'PUT' });
+      setNotification({
+        show: true,
+        message: activo ? 'Aula desactivada correctamente' : 'Aula reactivada correctamente',
+        type: 'success'
+      });
+      await fetchAulas();
+      closeModal();
+    } catch (error) {
+      if (error.statusCode >= 500) {
+        console.error("Error al cambiar estado:", error);
       }
+      setNotificationModal({
+        show: true,
+        message: error.message || "No se pudo cambiar el estado del aula",
+        type: 'error'
+      });
     }
-  }, [fetchAulas]);
+  };
 
   const columns = useMemo(() => [
     { header: 'Aula', accessor: 'nombre' },
@@ -105,8 +108,8 @@ export const useAulas = () => {
       render: (row) => (
         <span 
           className={`status-badge ${row.activo ? 'status-active' : 'status-inactive'} cursor-pointer`}
-          onClick={() => toggleStatus(row.id_aula, row.activo)}
-          title={row.activo ? "Clic para dar de baja" : "Aula Inactiva"}
+          onClick={() => toggleStatus(row.id_aula, row.activo, row.nombre)} 
+          title={row.activo ? "Clic para dar de baja" : "Clic para reactivar"}
         >
           {row.activo ? 'Activo' : 'Inactivo'}
         </span>
@@ -128,9 +131,7 @@ export const useAulas = () => {
   const handleSaveAula = async (formData) => {
     if (!formData.nombre || !formData.edificio || !formData.id_tipo_aula || !formData.capacidad) {
       setNotificationModal({
-        show: true,
-        message: "Complete los campos obligatorios.",
-        type: 'error'
+        show: true, message: "Complete los campos obligatorios.", type: 'error'
       });
       return;
     }
@@ -138,9 +139,7 @@ export const useAulas = () => {
     const regexLetra = /^[a-zA-Z]$/;
     if (!regexLetra.test(formData.edificio.trim())) {
       setNotificationModal({
-        show: true,
-        message: "El edificio debe ser exactamente una letra del abecedario (Ej: A, B, C).",
-        type: 'error'
+        show: true, message: "El edificio debe ser exactamente una letra del abecedario (Ej: A, B, C).", type: 'error'
       });
       return;
     }
@@ -155,15 +154,9 @@ export const useAulas = () => {
 
     try {
       if (modalState.type === 'add') {
-        await apiRequest('/aulas', {
-          method: 'POST',
-          body: JSON.stringify(dataToSave)
-        });
+        await apiRequest('/aulas', { method: 'POST', body: JSON.stringify(dataToSave) });
       } else {
-        await apiRequest(`/aulas/actualizar/${formData.id_aula}`, {
-          method: 'PUT',
-          body: JSON.stringify(dataToSave)
-        });
+        await apiRequest(`/aulas/actualizar/${formData.id_aula}`, { method: 'PUT', body: JSON.stringify(dataToSave) });
       }
       setNotificationModal({
         show: true,
@@ -177,9 +170,7 @@ export const useAulas = () => {
         console.error("Error al guardar aula:", error);
       }
       setNotificationModal({
-        show: true,
-        message: error.message || "Error al procesar la solicitud",
-        type: 'error'
+        show: true, message: error.message || "Error al procesar la solicitud", type: 'error'
       });
     }
   };
@@ -208,15 +199,11 @@ export const useAulas = () => {
   };
 
   return {
-    aulas: filteredAulas, 
-    tipos,
-    columns,
-    searchTerm, setSearchTerm,
-    modalState,
+    aulas: filteredAulas, tipos, columns,
+    searchTerm, setSearchTerm, modalState,
     openAddModal, openEditModal, closeModal,
-    handleSaveAula,
-    handleInputChange,
-    loading,
+    handleSaveAula, handleInputChange, loading,
+    executeToggleStatus,
     notificationModal, setNotificationModal,
     notification, setNotification
   };
