@@ -6,6 +6,7 @@ export const useDocentes = () => {
   const [facultades, setFacultades] = useState([]); 
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTipo, setFilterTipo] = useState(""); 
   const [filterEstado, setFilterEstado] = useState("");
@@ -145,8 +146,8 @@ export const useDocentes = () => {
       data: { 
         ...docente,
         email: docente.correo,
-        carga_minima: docente.carga_minima === 0 ? '' : docente.carga_minima,
-        carga_maxima: docente.carga_maxima === 0 ? '' : docente.carga_maxima,
+        carga_minima: docente.carga_minima === 0 || docente.carga_minima === null ? '' : docente.carga_minima,
+        carga_maxima: docente.carga_maxima === 0 || docente.carga_maxima === null ? '' : docente.carga_maxima,
         facultades: docente.facultades ? docente.facultades.map(f => f.id_facultad) : []
       } 
     });
@@ -160,16 +161,12 @@ export const useDocentes = () => {
   const handleSaveDocente = async (formData) => {
     if (isSaving) return;
 
-    if (!formData.nombres || !formData.apellidos || !formData.carga_minima || !formData.carga_maxima) {
-      setNotificationModal({ show: true, message: "Completa los campos obligatorios.", type: 'error' });
+    if (!formData.nombres || !formData.apellidos) {
+      setNotificationModal({ show: true, message: "Complete los campos.", type: 'error' });
       return;
     }
     if (modalState.type === 'add' && !formData.email) {
       setNotificationModal({ show: true, message: "El correo es obligatorio para crear el usuario.", type: 'error' });
-      return;
-    }
-    if (parseInt(formData.carga_minima) > parseInt(formData.carga_maxima)) {
-      setNotificationModal({ show: true, message: "La carga mínima no puede ser mayor a la máxima.", type: 'error' });
       return;
     }
     if (!formData.facultades || formData.facultades.length === 0) {
@@ -177,14 +174,23 @@ export const useDocentes = () => {
       return;
     }
 
+    const minVal = formData.carga_minima !== "" && formData.carga_minima !== undefined ? Number(formData.carga_minima) : null;
+    const maxVal = formData.carga_maxima !== "" && formData.carga_maxima !== undefined ? Number(formData.carga_maxima) : null;
+
+    if (minVal !== null && maxVal !== null && minVal > maxVal) {
+      setNotificationModal({ show: true, message: "La carga mínima no puede ser mayor a la máxima.", type: 'error' });
+      return;
+    }
+
     const payload = {
       nombres: formData.nombres,
       apellidos: formData.apellidos,
       tipo: formData.tipo,
-      carga_minima: parseInt(formData.carga_minima),
-      carga_maxima: parseInt(formData.carga_maxima),
       facultades: formData.facultades
     };
+
+    if (minVal !== null) payload.carga_minima = minVal;
+    if (maxVal !== null) payload.carga_maxima = maxVal;
 
     if (modalState.type === 'add') {
       payload.email = formData.email;
