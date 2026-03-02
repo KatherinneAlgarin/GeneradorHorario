@@ -11,6 +11,8 @@ import RoleRoute from './RoleRoute';
 import HomeDocente from '../pages/docente/HomeDocente';
 import HomeDecano from '../pages/decano/HomeDecano';
 import RegistroDisponibilidad from '../pages/docente/RegistroDisponibilidad';
+import GestorDocentesDecano from '../pages/decano/GestionDocentesDecano';
+import GestorAcademicoDecano from '../pages/decano/GestorAcademicoDecano';
 
 export const AppRouter = () => {
     return (
@@ -59,7 +61,9 @@ export const AppRouter = () => {
                     </RoleRoute>
                 }
             >
-                <Route index element={<HomeDecano />} /> 
+                <Route index element={<HomeDecano />} />
+                <Route path="docentes" element={<GestorDocentesDecano />} /> 
+                <Route path="academico" element={<GestorAcademicoDecano />} />
             </Route>
 
             <Route path="*" element={<h1>404 - No encontrado</h1>} />

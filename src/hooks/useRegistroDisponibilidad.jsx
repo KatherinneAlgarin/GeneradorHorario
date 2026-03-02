@@ -5,17 +5,13 @@ import { apiRequest } from '../services/api';
 export const useRegistroDisponibilidad = () => {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
   const [docente, setDocente] = useState(null);
   const [ciclo, setCiclo] = useState(null);
   const [bloques, setBloques] = useState([]);
   const [asignaturas, setAsignaturas] = useState([]);
-
   const [bloquesSeleccionados, setBloquesSeleccionados] = useState([]);
   const [asignaturasSeleccionadas, setAsignaturasSeleccionadas] = useState([]);
-
   const [isEditable, setIsEditable] = useState(true);
-
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
 
   const fetchData = useCallback(async () => {
@@ -40,7 +36,7 @@ export const useRegistroDisponibilidad = () => {
       }
 
       if (!docenteData.activo) {
-        setNotification({ show: true, message: "Tu cuenta está inactiva", type: 'error' });
+        setNotification({ show: true, message: "Su cuenta está inactiva", type: 'error' });
         return;
       }
 
@@ -54,6 +50,7 @@ export const useRegistroDisponibilidad = () => {
 
       setDocente(docenteInfo);
 
+      //trar información del ciclo activo, bloques horarios, asignaturas y preferencias del docente
       const cicloActivo = await apiRequest('/ciclos/activo');
       setCiclo(cicloActivo);
 
@@ -130,7 +127,7 @@ export const useRegistroDisponibilidad = () => {
     if (docente.carga_minima > 0 && horasOfrecidas < docente.carga_minima) {
       setNotification({ 
         show: true, 
-        message: `Faltan horas. Tu contrato es de ${docente.carga_minima} hrs, pero solo has seleccionado ${horasOfrecidas} hrs.`, 
+        message: `Faltan horas. Su contrato es de ${docente.carga_minima} hrs, pero solo ha seleccionado ${horasOfrecidas} hrs.`, 
         type: 'error' 
       });
       return;
@@ -161,7 +158,7 @@ export const useRegistroDisponibilidad = () => {
         })
       });
 
-      setNotification({ show: true, message: "¡Tus preferencias han sido guardadas exitosamente!", type: 'success' });
+      setNotification({ show: true, message: "¡Sus preferencias han sido guardadas exitosamente!", type: 'success' });
       
     } catch (error) {
       console.error("Error al guardar:", error);

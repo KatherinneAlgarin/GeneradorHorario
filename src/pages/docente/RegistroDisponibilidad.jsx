@@ -39,7 +39,7 @@ const RegistroDisponibilidad = () => {
     );
   };
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Cargando información del ciclo...</div>;
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Cargando información...</div>;
 
   // Cálculos para el termómetro
   const metaHoras = docente?.carga_minima || 0;
@@ -83,14 +83,14 @@ const RegistroDisponibilidad = () => {
         </div>
         {!cumpleMinimo && metaHoras > 0 && (
           <p style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '8px', marginBottom: 0 }}>
-            Te faltan {parseFloat((metaHoras - horasOfrecidas).toFixed(1))} horas para cumplir tu contrato.
+            Faltan {parseFloat((metaHoras - horasOfrecidas).toFixed(1))} horas para cumplir su contrato.
           </p>
         )}
       </div>
 
       {/* CUADRÍCULA DE HORARIO */}
       <div className="schedule-grid-container">
-        <h3>1. Selecciona tus bloques de tiempo libre</h3>
+        <h3>1. Seleccione sus bloques de tiempo libre</h3>
         
         <div className="schedule-grid">
           {/* Fila de Encabezados */}
@@ -129,7 +129,7 @@ const RegistroDisponibilidad = () => {
 
       {/* PREFERENCIAS DE ASIGNATURAS */}
       <div className="subjects-container">
-        <h3>2. Selecciona las asignaturas que deseas impartir</h3>
+        <h3>2. Seleccione las asignaturas que desea impartir</h3>
         <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '15px' }}>
           * Mostrando únicamente asignaturas de tu(s) facultad(es).
         </p>
@@ -157,7 +157,7 @@ const RegistroDisponibilidad = () => {
             })}
           </div>
         ) : (
-          <p style={{ color: '#888', fontStyle: 'italic' }}>No hay asignaturas disponibles para tu facultad en este ciclo.</p>
+          <p style={{ color: '#888', fontStyle: 'italic' }}>No hay asignaturas disponibles para su facultad en este ciclo.</p>
         )}
       </div>
 

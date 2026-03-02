@@ -77,6 +77,9 @@ const MainLayout = () => {
                   Gestión Docente
                 </Link>
               </li>
+              <li className="nav-item">
+                <Link to="/decano/academico" className="nav-link">Gestión Académica</Link>
+              </li>
 
               <li className="nav-item">
                 <Link to="/decano/horarios" className="nav-link">
