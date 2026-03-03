@@ -13,6 +13,7 @@ import HomeDecano from '../pages/decano/HomeDecano';
 import RegistroDisponibilidad from '../pages/docente/RegistroDisponibilidad';
 import GestorDocentesDecano from '../pages/decano/GestionDocentesDecano';
 import GestorAcademicoDecano from '../pages/decano/GestorAcademicoDecano';
+import NotFound from '../pages/error/NotFound';
 
 export const AppRouter = () => {
     return (
@@ -66,7 +67,7 @@ export const AppRouter = () => {
                 <Route path="academico" element={<GestorAcademicoDecano />} />
             </Route>
 
-            <Route path="*" element={<h1>404 - No encontrado</h1>} />
+            <Route path="*" element={<NotFound />} />
         </Routes>
     );
 };
