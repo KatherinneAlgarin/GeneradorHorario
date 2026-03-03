@@ -1,50 +1,39 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-
-const MOCK_DOCENTES = [
-  { id_docente: "d1", nombres: "Katherinne", apellidos: "Algarín" },
-  { id_docente: "d2", nombres: "Jimmy Ernesto", apellidos: "Ramos" },
-  { id_docente: "d3", nombres: "Gustavo", apellidos: "Retana" },
-];
-
-const MOCK_PREFERENCIAS = [
-  { id_docente: "d1", id_asignatura: "asig-1" }, 
-  { id_docente: "d2", id_asignatura: "asig-2" }, 
-];
-
-const MOCK_CLASES = [
-  { 
-    id_clase: "c1", id_asignatura: "asig-1", codigo: "BDO101", asignatura: "Base de Datos I", 
-    carrera: "Ingeniería en Sistemas", horas_teoricas: 2, horas_practicas: 2, seccion: "A", 
-    docente: null 
-  },
-  { 
-    id_clase: "c2", id_asignatura: "asig-2", codigo: "RED201", asignatura: "Redes de Computadoras", 
-    carrera: "Ingeniería en Sistemas", horas_teoricas: 3, horas_practicas: 2, seccion: "B", 
-    docente: null 
-  },
-  { 
-    id_clase: "c3", id_asignatura: "asig-3", codigo: "MAT101", asignatura: "Matemática I", 
-    carrera: "Ingeniería Industrial", horas_teoricas: 4, horas_practicas: 0, seccion: "A", 
-    docente: { id_docente: "d3", nombre_completo: "Gustavo Retana" } 
-  },
-];
+import { getUserRole } from '../services/authService';
+import { apiRequest } from '../services/api';
 
 export const useGestorAcademicoDecano = () => {
   const [clases, setClases] = useState([]);
+  const [docentesFacultad, setDocentesFacultad] = useState([]);
+  const [preferencias, setPreferencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterEstado, setFilterEstado] = useState("sin_asignar");
-  const [filterCarrera, setFilterCarrera] = useState("");
+  const [filterEstado, setFilterEstado] = useState("sin_asignar"); 
+  const [filterCarrera, setFilterCarrera] = useState(""); 
+
   const [modalAsignacion, setModalAsignacion] = useState({ isOpen: false, clase: null });
   const [docenteSeleccionado, setDocenteSeleccionado] = useState("");
 
   const fetchDatos = useCallback(async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      setClases(MOCK_CLASES);
+      const user = await getUserRole();
+      if (!user || !user.id_facultad) {
+        throw new Error("No se encontró la sesión del decano");
+      }
+
+      const [dataClases, dataDocentes, dataPreferencias] = await Promise.all([
+        apiRequest(`/decano/clases-ciclo/${user.id_facultad}`),
+        apiRequest(`/decano/docentes-carga/${user.id_facultad}`),
+        apiRequest(`/decano/preferencias`)
+      ]);
+
+      setClases(Array.isArray(dataClases) ? dataClases : []);
+      setDocentesFacultad(Array.isArray(dataDocentes) ? dataDocentes : []);
+      setPreferencias(Array.isArray(dataPreferencias) ? dataPreferencias : []);
+
     } catch (error) {
-      console.error("Error al cargar clases:", error);
+      console.error("Error al cargar datos académicos:", error);
     } finally {
       setLoading(false);
     }
@@ -72,7 +61,6 @@ export const useGestorAcademicoDecano = () => {
       if (filterEstado === "sin_asignar") matchesEstado = clase.docente === null;
       if (filterEstado === "asignadas") matchesEstado = clase.docente !== null;
 
-      // Aplicamos el filtro de carrera
       const matchesCarrera = !filterCarrera || clase.carrera === filterCarrera;
 
       return matchesSearch && matchesEstado && matchesCarrera;
@@ -83,8 +71,8 @@ export const useGestorAcademicoDecano = () => {
     const recomendados = [];
     const otros = [];
 
-    MOCK_DOCENTES.forEach(docente => {
-      const pidioMateria = MOCK_PREFERENCIAS.some(
+    docentesFacultad.forEach(docente => {
+      const pidioMateria = preferencias.some(
         pref => pref.id_docente === docente.id_docente && pref.id_asignatura === id_asignatura
       );
 
@@ -93,7 +81,7 @@ export const useGestorAcademicoDecano = () => {
     });
 
     return { recomendados, otros };
-  }, []);
+  }, [docentesFacultad, preferencias]);
 
   const abrirModalAsignacion = useCallback((clase) => {
     setModalAsignacion({ isOpen: true, clase });
@@ -104,19 +92,24 @@ export const useGestorAcademicoDecano = () => {
     setModalAsignacion({ isOpen: false, clase: null });
   }, []);
 
-  const guardarAsignacion = useCallback(() => {
-    if (!docenteSeleccionado) return;
+  // 🌐 ENVIAR ASIGNACIÓN AL BACKEND
+  const guardarAsignacion = useCallback(async () => {
+    if (!docenteSeleccionado || !modalAsignacion.clase) return;
 
-    const docenteAsignado = MOCK_DOCENTES.find(d => d.id_docente === docenteSeleccionado);
-    
-    setClases(prev => prev.map(c => 
-      c.id_clase === modalAsignacion.clase.id_clase 
-        ? { ...c, docente: { id_docente: docenteAsignado.id_docente, nombre_completo: `${docenteAsignado.nombres} ${docenteAsignado.apellidos}` } }
-        : c
-    ));
+    try {
+      await apiRequest(`/decano/clases/${modalAsignacion.clase.id_clase}/asignar`, {
+        method: "PATCH",
+        body: JSON.stringify({ id_docente: docenteSeleccionado })
+      });
 
-    cerrarModal();
-  }, [docenteSeleccionado, modalAsignacion, cerrarModal]);
+      await fetchDatos(); 
+      cerrarModal();
+
+    } catch (error) {
+      console.error("Error guardando la asignación:", error);
+      alert(error.message || "Hubo un error al intentar asignar el docente.");
+    }
+  }, [docenteSeleccionado, modalAsignacion, cerrarModal, fetchDatos]);
 
   return {
     clases: filteredClases, loading, estadisticas, carrerasUnicas,

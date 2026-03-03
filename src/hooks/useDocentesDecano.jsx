@@ -1,27 +1,19 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-
-
-const MOCK_DOCENTES_DECANO = [
-  { id_docente: "05315207", nombres: "Jimmy Ernesto", apellidos: "Ramos Castaneda", correo: "jimmy.r@catolica.edu.sv", tipo: "Hora Clase", carga_minima: 6, carga_maxima: 10, horas_asignadas: 6 }, 
-  { id_docente: "4060aa37", nombres: "Katherinne", apellidos: "Algarín", correo: "katherinne.a@catolica.edu.sv", tipo: "Tiempo Completo", carga_minima: 8, carga_maxima: 16, horas_asignadas: 0 }, 
-  { id_docente: "9e78a5cd", nombres: "Gustavo", apellidos: "Retana", correo: "gustavo.r@catolica.edu.sv", tipo: "Tiempo Completo", carga_minima: 2, carga_maxima: 4, horas_asignadas: 5 }, 
-  { id_docente: "extra1", nombres: "Ana", apellidos: "López", correo: "ana.l@catolica.edu.sv", tipo: "Tiempo Completo", carga_minima: 8, carga_maxima: 12, horas_asignadas: 4 }, 
-  { id_docente: "extra2", nombres: "Marta", apellidos: "Gómez", correo: "marta.g@catolica.edu.sv", tipo: "Hora Clase", carga_minima: 4, carga_maxima: 8, horas_asignadas: 8 }, 
-];
-
+import { getUserRole } from '../services/authService';
+import { apiRequest } from '../services/api';
 
 const determinarEstadoCarga = (asignadas, min, max) => {
   if (asignadas > max) return { label: 'Sobrecarga', css: 'status-inactive', isProblem: true, explicacion: `Se le han asignado ${asignadas} hrs semanales, excediendo su límite máximo registrado de ${max} hrs. Debe reasignar clases a otro docente.` };
   if (asignadas === max) return { label: 'Óptima', css: 'status-active', isProblem: false, explicacion: `El docente ha alcanzado exactamente su límite máximo de ${max} hrs semanales. No se le pueden asignar más clases.` };
   if (asignadas >= min && asignadas < max) return { label: 'Disponible', css: 'color-blue', isProblem: false, explicacion: `Cumple su mínimo contractual de ${min} hrs, pero aún se le pueden asignar más clases (Límite máximo: ${max} hrs).` };
   if (asignadas > 0 && asignadas < min) return { label: 'Carga Incompleta', css: 'color-yellow', isProblem: true, explicacion: `Tiene ${asignadas} hrs asignadas, lo cual NO cubre su mínimo contractual de ${min} hrs semanales.` };
-  
   return { label: 'Sin Carga', css: 'status-inactive', isProblem: true, explicacion: `Actualmente no tiene ninguna hora asignada en el ciclo. Su mínimo requerido es de ${min} hrs semanales.` };
 };
 
 export const useDocentesDecano = () => {
   const [docentesRaw, setDocentesRaw] = useState([]);
   const [loading, setLoading] = useState(true);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTipo, setFilterTipo] = useState(""); 
   const [filterEstado, setFilterEstado] = useState("");
@@ -30,8 +22,17 @@ export const useDocentesDecano = () => {
   const fetchDatos = useCallback(async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      setDocentesRaw(MOCK_DOCENTES_DECANO);
+      const user = await getUserRole();
+      
+      if (!user || !user.id_facultad) {
+        console.error("No se encontró la sesión del decano o el ID de la facultad");
+        setLoading(false);
+        return;
+      }
+
+      const data = await apiRequest(`/decano/docentes-carga/${user.id_facultad}`);
+      setDocentesRaw(Array.isArray(data) ? data : []); 
+
     } catch (error) {
       console.error("Error al cargar docentes:", error);
     } finally {
@@ -41,11 +42,9 @@ export const useDocentesDecano = () => {
 
   useEffect(() => { fetchDatos(); }, [fetchDatos]);
 
-  // Funciones para el Modal
   const abrirModalDetalle = useCallback((docente) => setModalDocente(docente), []);
   const cerrarModal = useCallback(() => setModalDocente(null), []);
 
-  
   const docentesProcesados = useMemo(() => {
     return docentesRaw.map(d => ({ ...d, estadoCarga: determinarEstadoCarga(d.horas_asignadas, d.carga_minima, d.carga_maxima) }));
   }, [docentesRaw]);
@@ -60,7 +59,6 @@ export const useDocentesDecano = () => {
     return { total: docentesProcesados.length, optimas, disponibles, atencion };
   }, [docentesProcesados]);
 
-  // Filtrado
   const filteredDocentes = useMemo(() => {
     return docentesProcesados.filter(docente => {
       const lowerSearch = searchTerm.toLowerCase();
@@ -78,7 +76,7 @@ export const useDocentesDecano = () => {
     });
   }, [docentesProcesados, searchTerm, filterTipo, filterEstado]);
 
-  
+ 
   const columns = useMemo(() => [
     { header: 'Nombres', accessor: 'nombres' },
     { header: 'Apellidos', accessor: 'apellidos' },
@@ -118,6 +116,6 @@ export const useDocentesDecano = () => {
   return {
     docentes: filteredDocentes, loading, estadisticas,
     searchTerm, setSearchTerm, filterTipo, setFilterTipo, filterEstado, setFilterEstado,
-    columns, modalDocente, cerrarModal 
+    columns, modalDocente, abrirModalDetalle, cerrarModal
   };
 };

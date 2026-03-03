@@ -40,7 +40,8 @@ export const getUserRole = async () => {
       return { 
         rol: "decano", 
         activo: admin.activo,
-        id: admin.id_administrador
+        id: admin.id_administrador,
+        id_facultad: admin.id_facultad
       };
     }
   }

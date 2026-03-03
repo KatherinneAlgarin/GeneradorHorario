@@ -112,7 +112,7 @@ const GestorAcademicoDecano = () => {
       </div>
 
       {loading ? (
-        <div className="loading-container">Cargando clases...</div>
+        <div className="loading-container">Cargando...</div>
       ) : (
         <Table columns={columns} data={clases} />
       )}
