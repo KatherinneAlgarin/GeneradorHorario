@@ -38,6 +38,7 @@ export const useHorario = (initialData = []) => {
   const [scheduleData, setScheduleData] = useState(initialData);
   const [draggedClass, setDraggedClass] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [generacionResult, setGeneracionResult] = useState(null);
   const [horarioEstado, setHorarioEstado] = useState(null);
@@ -99,8 +100,30 @@ export const useHorario = (initialData = []) => {
     }
   }, []);
 
+// consulta el estado general de la facultad
+  const consultarEstadoFacultad = useCallback(async (idFacultad) => {
+    if (!idFacultad) {
+      setHorarioEstado(null);
+      return;
+    }
+    try {
+      const data = await apiRequest(`/horarios/estado-facultad/${idFacultad}`);
+      if (data && data.estado) {
+        setHorarioEstado({
+          estado: data.estado,
+          es_editable: data.es_editable
+        });
+      } else {
+        setHorarioEstado(null);
+      }
+    } catch (err) {
+      console.error("Error consultando estado de la facultad:", err);
+      setHorarioEstado(null);
+    }
+  }, []);
+
   const generarHorario = useCallback(async (idFacultad, forzarSobrescritura = true) => {
-    setLoading(true);
+    setIsGenerating(true);
     setError(null);
     setGeneracionResult(null);
     
@@ -142,7 +165,7 @@ export const useHorario = (initialData = []) => {
       }
       throw customError;
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   }, []);
 
@@ -268,6 +291,7 @@ export const useHorario = (initialData = []) => {
     updateModalData,
     saveClass,
     loading,
+    isGenerating,
     error,
     generacionResult,
     horarioEstado,
@@ -276,6 +300,7 @@ export const useHorario = (initialData = []) => {
     generarHorario,
     cambiarEstadoHorario,
     timeSlots,
+    consultarEstadoFacultad,
     days: Object.values(daysMap)
   };
 };
