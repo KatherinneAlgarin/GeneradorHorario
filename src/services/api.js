@@ -12,20 +12,30 @@ export const apiRequest = async (endpoint, options = {}) => {
     });
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
+      let errorBody = {};
+      try {
+        errorBody = await response.json();
+      } catch (e) {
+        // Si no es JSON, usamos el status como mensaje
+        errorBody = { error: `Error ${response.status}: ${response.statusText}` };
+      }
       const error = new Error(errorBody.error || `Error: ${response.status}`);
       error.statusCode = response.status;
       error.isBusinessError = true;
       throw error;
     }
 
-    return await response.json();
+    const jsonData = await response.json();
+    return jsonData;
   } catch (error) {
-    //  errores de conexión o técnicos
-    // Los errores de negocio se manejan en los hooks
-    if (!error.isBusinessError) {
-      console.error("Error en la conexión con la API:");
+    // Si ya es un error de negocio o custom, lo relanzamos
+    if (error.isBusinessError || error instanceof TypeError === false) {
+      throw error;
     }
-    throw error;
+    // Error de conexión
+    const connectionError = new Error("Error de conexión con el servidor");
+    connectionError.isConnectionError = true;
+    console.error("Error de conexión:", error.message);
+    throw connectionError;
   }
 };
