@@ -14,6 +14,7 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingUser, setPendingUser] = useState(null); 
 
@@ -90,10 +91,13 @@ export default function Login() {
         })
       });
 
-      alert("¡Contraseña actualizada con éxito! Bienvenido al sistema.");
+      setSuccessMessage("¡Contraseña actualizada con éxito! Redirigiendo...");
       setIsLoading(false);
       
-      redirectByRole(pendingUser.rol);
+      // Redirigir después de un breve momento para mostrar el mensaje
+      setTimeout(() => {
+        redirectByRole(pendingUser.rol);
+      }, 1500);
       
     } catch (err) {
       setIsLoading(false);
@@ -155,6 +159,20 @@ export default function Login() {
           </p>
 
           {error && <div className="error-message">{error}</div>}
+          
+          {successMessage && (
+            <div style={{ 
+              background: '#dcfce7', 
+              color: '#166534', 
+              padding: '12px', 
+              borderRadius: '8px', 
+              marginBottom: '15px',
+              textAlign: 'center',
+              fontWeight: '600'
+            }}>
+              ✓ {successMessage}
+            </div>
+          )}
 
           <form onSubmit={handleForcePasswordUpdate}>
             <div className="form-group">
@@ -188,8 +206,8 @@ export default function Login() {
               <li>Un carácter especial (!@#$%^&*)</li>
             </ul>
             
-            <button type="submit" className="btn-login" disabled={isLoading} style={{ marginBottom: '10px' }}>
-              {isLoading ? 'Guardando...' : 'Confirmar y Entrar'}
+            <button type="submit" className="btn-login" disabled={isLoading || successMessage} style={{ marginBottom: '10px' }}>
+              {isLoading ? 'Guardando...' : successMessage ? '¡Listo!' : 'Confirmar y Entrar'}
             </button>
 
             {!isLoading && (

@@ -17,7 +17,8 @@ const GestorDocentes = () => {
     openAddModal, openEditModal, closeModal,
     handleSaveDocente, handleInputChange, handleCheckboxChange, confirmChangeStatus, executeStatusChange,
     notificationModal, setNotificationModal,
-    notification, setNotification
+    notification, setNotification,
+    confirmSaveWithWarning
   } = useDocentes();
 
   const formData = modalState.data;
@@ -102,6 +103,24 @@ const GestorDocentes = () => {
                 style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
               >
                 {formData?.action === 'desactivar' ? 'Eliminar' : 'Reactivar'}
+              </button>
+            </>
+          ) : notificationModal.type === 'warning' && notificationModal.needsConfirmation ? (
+            <>
+              <button 
+                className="btn-cancel" 
+                onClick={() => setNotificationModal({ show: false, message: '', type: 'error' })}
+                disabled={isSaving}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn-save" 
+                onClick={confirmSaveWithWarning}
+                disabled={isSaving}
+                style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer', background: '#f59e0b' }}
+              >
+                Sí, Crear Sin Carga
               </button>
             </>
           ) : (

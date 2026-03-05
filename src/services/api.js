@@ -19,9 +19,13 @@ export const apiRequest = async (endpoint, options = {}) => {
         // Si no es JSON, usamos el status como mensaje
         errorBody = { error: `Error ${response.status}: ${response.statusText}` };
       }
-      const error = new Error(errorBody.error || `Error: ${response.status}`);
+      const errorMessage = errorBody.error || errorBody.mensaje || `Error: ${response.status}`;
+      const error = new Error(errorMessage);
       error.statusCode = response.status;
       error.isBusinessError = true;
+      // Guardar datos adicionales del backend (como codigo, mensaje completo)
+      if (errorBody.codigo) error.codigo = errorBody.codigo;
+      if (errorBody.mensaje) error.mensajeCompleto = errorBody.mensaje;
       throw error;
     }
 

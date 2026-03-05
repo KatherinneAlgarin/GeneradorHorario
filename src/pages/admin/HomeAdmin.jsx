@@ -121,12 +121,16 @@ const HomeAdmin = () => {
       
       setShowConfirmModal(false);
     } catch (err) {
-      if (err && err.statusCode === 409 && err.message && err.message.includes("BORRADOR")) {
-        setConfirmMessage("Ya existe un horario en estado BORRADOR. ¿Desea eliminar las clases generadas previamente y volver a generarlas?");
-        setShowConfirmModal(true);
-      } else {
-        alert((err && err.message) || "Error al generar el horario");
+      // Verificar si es error 409 (horario existente en BORRADOR)
+      if (err && err.statusCode === 409) {
+        const mensaje = err.mensajeCompleto || err.message || "";
+        if (mensaje.includes("BORRADOR") || err.codigo === "EXISTE_BORRADOR") {
+          setConfirmMessage("Ya existe un horario en estado BORRADOR. ¿Desea eliminar las clases generadas previamente y volver a generarlas?");
+          setShowConfirmModal(true);
+          return;
+        }
       }
+      alert((err && err.message) || "Error al generar el horario");
     }
   };
   

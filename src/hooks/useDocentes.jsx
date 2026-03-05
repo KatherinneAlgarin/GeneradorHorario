@@ -44,10 +44,18 @@ export const useDocentes = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setModalState(prev => ({
-      ...prev,
-      data: { ...prev.data, [name]: value }
-    }));
+    setModalState(prev => {
+      const newData = { ...prev.data, [name]: value };
+      
+      // Cuando cambia el tipo de contratación, actualizar cargas automáticamente
+      if (name === 'tipo' && prev.type === 'add') {
+        const defaultCarga = getDefaultCargaByTipo(value);
+        newData.carga_minima = defaultCarga.carga_minima;
+        newData.carga_maxima = defaultCarga.carga_maxima;
+      }
+      
+      return { ...prev, data: newData };
+    });
   };
 
   const handleCheckboxChange = (id_facultad) => {
@@ -127,13 +135,23 @@ export const useDocentes = () => {
     }
   ], []);
 
+  const getDefaultCargaByTipo = (tipo) => {
+    if (tipo === 'Tiempo Completo') {
+      return { carga_minima: 8, carga_maxima: 8 };
+    } else if (tipo === 'Hora Clase') {
+      return { carga_minima: 4, carga_maxima: 4 };
+    }
+    return { carga_minima: '', carga_maxima: '' };
+  };
+
   const openAddModal = () => {
     setNotificationModal({ show: false, message: '', type: 'error' });
+    const defaultCarga = getDefaultCargaByTipo('Tiempo Completo');
     setModalState({ 
       isOpen: true, type: 'add',
       data: { 
         nombres: '', apellidos: '', email: '',
-        tipo: 'Tiempo Completo', carga_minima: '', carga_maxima: '', 
+        tipo: 'Tiempo Completo', carga_minima: defaultCarga.carga_minima, carga_maxima: defaultCarga.carga_maxima, 
         facultades: []
       } 
     });
@@ -182,6 +200,42 @@ export const useDocentes = () => {
       return;
     }
 
+    // Verificar si no se asignó carga mínima y máxima
+    const sinCarga = (minVal === null || minVal === 0) && (maxVal === null || maxVal === 0);
+    
+    // Si hay advertencia de sin carga, mostrar confirmación
+    if (sinCarga) {
+      setNotificationModal({ 
+        show: true, 
+        message: "⚠️ El docente se creará SIN CARGA asignada. ¿Desea continuar de todos modos?", 
+        type: 'warning',
+        needsConfirmation: true,
+        confirmedSave: false
+      });
+      // Guardar los datos del payload para usar después de la confirmación
+      const payload = {
+        nombres: formData.nombres,
+        apellidos: formData.apellidos,
+        tipo: formData.tipo,
+        facultades: formData.facultades
+      };
+      if (modalState.type === 'add') {
+        payload.email = formData.email;
+      }
+      // Guardar en el estado para usar después
+      setModalState(prev => ({
+        ...prev,
+        pendingPayload: payload,
+        pendingSave: true
+      }));
+      return;
+    }
+
+    // Si ya fue confirmado o no hay advertencia, proceder normalmente
+    await saveDocentePayload(formData, minVal, maxVal);
+  };
+
+  const saveDocentePayload = async (formData, minVal, maxVal) => {
     const payload = {
       nombres: formData.nombres,
       apellidos: formData.apellidos,
@@ -209,6 +263,38 @@ export const useDocentes = () => {
       });
       
       await fetchDatos();
+      // Limpiar estado de confirmación pendiente
+      setModalState(prev => ({ ...prev, pendingPayload: null, pendingSave: false }));
+      setTimeout(() => closeModal(), 1500);
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      setNotificationModal({ show: true, message: error.message || "Error al procesar la solicitud", type: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Función para confirmar el guardado cuando hay advertencia
+  const confirmSaveWithWarning = async () => {
+    const { pendingPayload } = modalState;
+    if (!pendingPayload) return;
+    
+    // Limpiar la notificación de advertencia
+    setNotificationModal({ show: false, message: '', type: 'error' });
+    
+    setIsSaving(true);
+    try {
+      const url = modalState.type === 'add' ? '/docentes' : `/docentes/actualizar/${modalState.data.id_docente}`;
+      const method = modalState.type === 'add' ? 'POST' : 'PUT';
+
+      await apiRequest(url, { method, body: JSON.stringify(pendingPayload) });
+
+      setNotificationModal({
+        show: true, message: modalState.type === 'add' ? 'Docente registrado exitosamente' : 'Docente actualizado exitosamente', type: 'success'
+      });
+      
+      await fetchDatos();
+      setModalState(prev => ({ ...prev, pendingPayload: null, pendingSave: false }));
       setTimeout(() => closeModal(), 1500);
     } catch (error) {
       console.error("Error al guardar:", error);
@@ -223,6 +309,7 @@ export const useDocentes = () => {
     searchTerm, setSearchTerm, filterTipo, setFilterTipo, filterEstado, setFilterEstado,   
     modalState, loading, isSaving, openAddModal, openEditModal, closeModal,
     handleSaveDocente, handleInputChange, handleCheckboxChange, confirmChangeStatus, executeStatusChange,
-    notificationModal, setNotificationModal, notification, setNotification
+    notificationModal, setNotificationModal, notification, setNotification,
+    confirmSaveWithWarning
   };
 };
