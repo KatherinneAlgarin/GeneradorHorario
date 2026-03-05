@@ -292,13 +292,13 @@ const HomeAdmin = () => {
             {carreras.map(c => <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>)}
           </select>
         </div>
-        <div style={{ flex: 1 }}>
+        {/* <div style={{ flex: 1 }}>
           <label>Ciclo Activo</label>
           <select style={{ width: '100%', padding: '10px' }} value={selectedCiclo} onChange={e => setSelectedCiclo(e.target.value)} disabled>
             <option value="">-- Seleccionar --</option>
             {ciclos.map(c => <option key={c.id_ciclo_academico} value={c.id_ciclo_academico}>{c.nombre}</option>)}
           </select>
-        </div>
+        </div> */}
       </div>
 
       {/* Botones de estado del horario */}
