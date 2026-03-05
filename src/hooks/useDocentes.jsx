@@ -23,6 +23,22 @@ export const useDocentes = () => {
     show: false, message: '', type: 'error'
   });
 
+  const handleTipoChange = (tipoSeleccionado) => {
+  const cargasMinimas = {
+    'Tiempo Completo': 8,
+    'Hora Clase': 4
+  };
+
+  setModalState(prev => ({
+    ...prev,
+    data: {
+      ...prev.data,
+      tipo: tipoSeleccionado,
+      carga_minima: cargasMinimas[tipoSeleccionado] || ''
+    }
+  }));
+};
+
   const fetchDatos = useCallback(async () => {
     setLoading(true);
     try {
@@ -223,6 +239,6 @@ export const useDocentes = () => {
     searchTerm, setSearchTerm, filterTipo, setFilterTipo, filterEstado, setFilterEstado,   
     modalState, loading, isSaving, openAddModal, openEditModal, closeModal,
     handleSaveDocente, handleInputChange, handleCheckboxChange, confirmChangeStatus, executeStatusChange,
-    notificationModal, setNotificationModal, notification, setNotification
+    notificationModal, setNotificationModal, notification, setNotification, handleTipoChange
   };
 };
