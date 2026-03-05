@@ -10,31 +10,21 @@ import { apiRequest } from '../../services/api';
 import '../../styles/AdminDashboard.css';
 
 const HomeAdmin = () => {
-  // Datos de facultades y ciclos
   const { facultades, loading: loadingFacultades } = useFacultades();
   const { ciclos } = useCiclos();
   
-  // Separamos los estados de Facultad para Generar y Visualizar
   const [selectedFacultyGen, setSelectedFacultyGen] = useState(""); 
   const [selectedFacultyView, setSelectedFacultyView] = useState(""); 
   
   const [selectedCareer, setSelectedCareer] = useState("");
   const [selectedCiclo, setSelectedCiclo] = useState("");
   
-  // Estado para estadísticas
-  const [stats, setStats] = useState({
-    docentes: { asignados: 0, sin_asignar: 0 },
-    aulas: { asignadas: 0, sin_asignar: 0 },
-    materias: 0
-  });
-
-  // Estado para modales
+  const [stats, setStats] = useState({ docentes: { asignados: 0, sin_asignar: 0 }, aulas: { asignadas: 0, sin_asignar: 0 }, materias: 0 });
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [conflictos, setConflictos] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState("");
 
-  // Ciclo activo por defecto
   useEffect(() => {
     const cicloActivo = ciclos.find(c => c.activo);
     if (cicloActivo) {
@@ -42,10 +32,10 @@ const HomeAdmin = () => {
     }
   }, [ciclos]);
 
-  // Hook de horario
   const { 
-    scheduleData, modalState, setDraggedClass, moveClass, 
-    openModal, closeModal, updateModalData, saveClass,
+    scheduleData, modalState, 
+    // setDraggedClass, moveClass, updateModalData, saveClass, // COMENTADOS: Funcionalidad Futura
+    openModal, closeModal, 
     loading: loadingHorario,
     isGenerating,
     error: errorHorario,
@@ -55,12 +45,11 @@ const HomeAdmin = () => {
     generarHorario,
     obtenerHorarioPorCarrera,
     cambiarEstadoHorario,
-    consultarEstadoFacultad, // <-- Agregada la nueva función del hook
+    consultarEstadoFacultad,
     timeSlots,
     days
   } = useHorario();
 
-  // Cargar carreras cuando se selecciona facultad (Vista)
   const [carreras, setCarreras] = useState([]);
   
   useEffect(() => {
@@ -76,7 +65,6 @@ const HomeAdmin = () => {
     }
   }, [selectedFacultyView]);
 
-  // Consultar el estado general de la facultad al seleccionarla
   useEffect(() => {
     if (selectedFacultyView) {
       consultarEstadoFacultad(selectedFacultyView);
@@ -85,18 +73,15 @@ const HomeAdmin = () => {
     }
   }, [selectedFacultyView, consultarEstadoFacultad]);
 
-  // Cargar el horario específico de la carrera
   useEffect(() => {
     if (selectedCareer) {
       obtenerHorarioPorCarrera(selectedCareer);
     } else {
       clearSchedule();
-      // Si deseleccionan la carrera pero mantienen la facultad, recargamos el estado
       if (selectedFacultyView) consultarEstadoFacultad(selectedFacultyView);
     }
   }, [selectedCareer, selectedFacultyView, consultarEstadoFacultad, obtenerHorarioPorCarrera]);
 
-  // Handler para generar horario
   const handleGenerarHorario = async (forzarSobrescritura = false) => {
     if (!selectedFacultyGen) {
       alert("Por favor selecciona una facultad para generar");
@@ -111,7 +96,6 @@ const HomeAdmin = () => {
         setShowConflictModal(true);
       }
       
-      // Si la facultad generada es la misma que estamos viendo, recargamos la vista
       if (selectedFacultyView === selectedFacultyGen) {
         consultarEstadoFacultad(selectedFacultyView);
         if (selectedCareer) {
@@ -134,10 +118,8 @@ const HomeAdmin = () => {
     handleGenerarHorario(true);
   };
 
-  // Handler para cambiar estado
   const handleCambiarEstado = async (nuevoEstado) => {
     if (!selectedFacultyView) return;
-    
     try {
       await cambiarEstadoHorario(selectedFacultyView, nuevoEstado);
       alert(`Estado cambiado a ${nuevoEstado} exitosamente`);
@@ -176,17 +158,16 @@ const HomeAdmin = () => {
         <div className="form-group-modal">
           <label>Materia</label>
           <input 
-            disabled={modalState.type === 'view'} 
+            disabled={true} // Forzado a true (solo lectura)
             value={modalState.data?.nombre_asignatura || ''} 
-            onChange={e => updateModalData('nombre_asignatura', e.target.value)} 
+            /* onChange={e => updateModalData('nombre_asignatura', e.target.value)} // COMENTADO */
           />
         </div>
         <div className="form-group-modal">
           <label>Sección</label>
           <input 
-            disabled={modalState.type === 'view'} 
+            disabled={true} 
             value={modalState.data?.codigo_seccion || ''} 
-            onChange={e => updateModalData('codigo_seccion', e.target.value)} 
           />
         </div>
       </div>
@@ -194,17 +175,15 @@ const HomeAdmin = () => {
         <div className="form-group-modal">
           <label>Docente</label>
           <input 
-            disabled={modalState.type === 'view'} 
+            disabled={true} 
             value={modalState.data?.nombre_docente || ''} 
-            onChange={e => updateModalData('nombre_docente', e.target.value)} 
           />
         </div>
         <div className="form-group-modal">
           <label>Aula</label>
           <input 
-            disabled={modalState.type === 'view'} 
+            disabled={true} 
             value={modalState.data?.nombre_aula || ''} 
-            onChange={e => updateModalData('nombre_aula', e.target.value)} 
           />
         </div>
       </div>
@@ -214,11 +193,13 @@ const HomeAdmin = () => {
   const renderModalFooter = () => (
     <>
       <button className="btn-cancel" onClick={closeModal}>
-        {modalState.type === 'view' ? 'Cerrar' : 'Cancelar'}
+        Cerrar
       </button>
+      {/* COMENTADO: Ocultamos el botón guardar porque estamos en modo de solo lectura 
       {modalState.type !== 'view' && (
         <button className="btn-save" onClick={saveClass}>Guardar</button>
-      )}
+      )} 
+      */}
     </>
   );
 
@@ -316,7 +297,7 @@ const HomeAdmin = () => {
         </div>
       </div>
 
-      {/* Botones de estado del horario - CONDICIÓN ESTRICTA APLICADA */}
+      {/* Botones de estado del horario */}
       {horarioEstado && selectedCareer && filteredSchedule.length > 0 && (
         <div style={{ background: '#f8fafc', padding: '15px 20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px', display: 'flex', gap: '15px', alignItems: 'center', justifyContent: 'space-between' }}>
           
@@ -379,11 +360,17 @@ const HomeAdmin = () => {
             scheduleData={filteredSchedule}
             timeSlots={timeSlots}
             days={days}
-            readOnly={!horarioEstado?.es_editable} 
+            // Forzamos la vista de solo lectura independiente del estado del horario
+            readOnly={true} 
+            
+            /* ==== COMENTADO: Funciones de edición y arrastre futuras ====
             onDragStart={setDraggedClass}
             onDrop={(e, day, time) => moveClass(day, time)}
             onAdd={(day, time) => openModal('add', null, { day, time }, selectedCareer)}
             onEdit={(e, item) => { e.stopPropagation(); openModal('edit', item); }}
+            ================================================================*/
+            
+            // Mantenemos solo la visualización
             onView={(item) => openModal('view', item)}
           />
         ) : (
@@ -401,10 +388,7 @@ const HomeAdmin = () => {
       <ModalGeneral
         isOpen={modalState.isOpen}
         onClose={closeModal}
-        title={
-          modalState.type === 'view' ? 'Detalles de Clase' : 
-          modalState.type === 'add' ? 'Nueva Clase' : 'Editar Clase'
-        }
+        title="Detalles de la Clase"
         footer={renderModalFooter()}
       >
         {renderModalContent()}

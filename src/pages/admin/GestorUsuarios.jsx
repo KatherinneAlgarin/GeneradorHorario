@@ -9,13 +9,13 @@ const GestorUsuariosTabs = () => {
 
   const tabOptions = [
     { id: 'docentes', label: 'Docentes' },
-    { id: 'decanos', label: 'Decanos' }
+    // { id: 'decanos', label: 'Decanos' }
   ];
 
   const renderContent = () => {
     switch (activeTab) {
       case 'docentes': return <GestorDocentes />;
-      case 'decanos': return <GestorDecanos />;
+      // case 'decanos': return <GestorDecanos />;
       default: return <GestorDocentes />;
     }
   };

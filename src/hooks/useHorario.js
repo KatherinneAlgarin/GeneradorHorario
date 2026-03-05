@@ -36,7 +36,7 @@ const transformApiDataToSchedule = (eventos) => {
 
 export const useHorario = (initialData = []) => {
   const [scheduleData, setScheduleData] = useState(initialData);
-  const [draggedClass, setDraggedClass] = useState(null);
+  // const [draggedClass, setDraggedClass] = useState(null); // COMENTADO: Funcionalidad futura
   const [loading, setLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
@@ -61,7 +61,6 @@ export const useHorario = (initialData = []) => {
         .eq("id_auth_user", user.id)
         .maybeSingle();
       
-      // Solo devolvemos el string del UUID, nada más
       return admin?.id_administrador ? String(admin.id_administrador) : null;
     } catch (error) {
       console.error("Error en getAdminId:", error);
@@ -100,7 +99,6 @@ export const useHorario = (initialData = []) => {
     }
   }, []);
 
-// consulta el estado general de la facultad
   const consultarEstadoFacultad = useCallback(async (idFacultad) => {
     if (!idFacultad) {
       setHorarioEstado(null);
@@ -128,21 +126,15 @@ export const useHorario = (initialData = []) => {
     setGeneracionResult(null);
     
     try {
-      // Primero verificar que idFacultad sea válido
-      if (!idFacultad) {
-        throw new Error("ID de facultad no proporcionado");
-      }
+      if (!idFacultad) throw new Error("ID de facultad no proporcionado");
       
       const idAdmin = await getAdminId();
-      
-      // Asegurar que los valores sean strings o booleanos puros (nada de objetos complejos)
       const payload = {
         id_facultad: String(idFacultad).trim(),
         id_administrador: idAdmin ? String(idAdmin).trim() : null,
         forzar_sobrescritura: Boolean(forzarSobrescritura)
       };
       
-      // Verificar que payload sea JSON válido antes de enviar
       const jsonString = JSON.stringify(payload);
       
       const result = await apiRequest('/horarios/generar', {
@@ -153,12 +145,10 @@ export const useHorario = (initialData = []) => {
       setGeneracionResult(result);
       return result;
     } catch (err) {
-      // Si el error ya tiene mensaje, lo usamos; si no, usamos uno genérico
       const errorMessage = (err && err.message) ? String(err.message) : "Error al generar el horario";
       console.error("Error al generar horario:", errorMessage);
       setError(errorMessage);
       
-      // Crear error simple sin propiedades complejas
       const customError = new Error(errorMessage);
       if (err && err.statusCode) {
         customError.statusCode = err.statusCode;
@@ -196,6 +186,8 @@ export const useHorario = (initialData = []) => {
     }
   }, [horarioEstado]);
 
+  /* FUNCIONALIDADES DE EDICIÓN MANUAL Y ARRASTRE FUTURAS
+  
   const checkConflicts = (newItem, excludeId = null) => {
     const isOccupied = scheduleData.find(c => 
       c.dia === newItem.dia && 
@@ -218,62 +210,39 @@ export const useHorario = (initialData = []) => {
 
   const moveClass = (newDay, newTime) => {
     if (!draggedClass) return;
-    
     const tempClass = { ...draggedClass, dia: newDay, hora_inicio: newTime };
     const error = checkConflicts(tempClass, draggedClass.id_clase);
-    
-    if (error) {
-      alert(error);
-      return;
-    }
-
+    if (error) { alert(error); return; }
     const updated = scheduleData.map(item => 
       item.id_clase === draggedClass.id_clase ? tempClass : item
     );
     setScheduleData(updated);
     setDraggedClass(null);
   };
-
-  const openModal = (type, data = null, slot = null, careerId = null) => {
-    const initialData = type === 'add' ? {
-      id_clase: '', nombre_asignatura: '', nombre_docente: '', 
-      nombre_aula: '', codigo_seccion: '', color: 'color-blue',
-      id_carrera: parseInt(careerId) 
-    } : { ...data };
-
-    setModalState({ isOpen: true, type, data: initialData, targetSlot: slot });
-  };
-
-  const closeModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
-
+  
   const updateModalData = (field, value) => {
-    setModalState(prev => ({
-      ...prev,
-      data: { ...prev.data, [field]: value }
-    }));
+    setModalState(prev => ({ ...prev, data: { ...prev.data, [field]: value } }));
   };
 
   const saveClass = () => {
     const { data, type, targetSlot } = modalState;
     if (!data.nombre_asignatura || !data.nombre_aula) return alert("Faltan datos obligatorios");
-
     const classToSave = type === 'add' ? {
-      ...data,
-      id_clase: crypto.randomUUID(),
-      dia: targetSlot.day,
-      hora_inicio: targetSlot.time
+      ...data, id_clase: crypto.randomUUID(), dia: targetSlot.day, hora_inicio: targetSlot.time
     } : data;
-
     const error = checkConflicts(classToSave, type === 'edit' ? data.id_clase : null);
     if (error) return alert(error);
-
-    if (type === 'add') {
-      setScheduleData([...scheduleData, classToSave]);
-    } else {
-      setScheduleData(scheduleData.map(c => c.id_clase === classToSave.id_clase ? classToSave : c));
-    }
+    if (type === 'add') { setScheduleData([...scheduleData, classToSave]); } 
+    else { setScheduleData(scheduleData.map(c => c.id_clase === classToSave.id_clase ? classToSave : c)); }
     closeModal();
+  }; */
+
+  const openModal = (type, data = null, slot = null, careerId = null) => {
+    // Por el momento solo abriremos en modo vista
+    setModalState({ isOpen: true, type: 'view', data: { ...data }, targetSlot: slot });
   };
+
+  const closeModal = () => setModalState(prev => ({ ...prev, isOpen: false }));
 
   const clearSchedule = () => {
     setScheduleData([]);
@@ -284,12 +253,12 @@ export const useHorario = (initialData = []) => {
   return {
     scheduleData,
     modalState,
-    setDraggedClass,
-    moveClass,
+    // setDraggedClass, 
+    // moveClass,        
     openModal,
     closeModal,
-    updateModalData,
-    saveClass,
+    // updateModalData, 
+    // saveClass,       
     loading,
     isGenerating,
     error,

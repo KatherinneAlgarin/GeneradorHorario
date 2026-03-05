@@ -149,6 +149,10 @@ const RegistroDisponibilidad = () => {
           className="btn-save-large" 
           onClick={handleGuardar}
           disabled={!isEditable || isSaving}
+          style={{ 
+            opacity: (!isEditable || isSaving) ? 0.5 : 1, 
+            cursor: (!isEditable || isSaving) ? 'not-allowed' : 'pointer' 
+          }}
         >
           {isSaving ? 'Guardando preferencias...' : 'Guardar Disponibilidad'}
         </button>
