@@ -5,14 +5,14 @@ import Filtro from '../../components/common/Filtro';
 import ModalGeneral from '../../components/common/ModalGeneral';
 import Notification from '../../components/common/Notification';
 import { useDocentes } from '../../hooks/useDocentes';
-import '../../styles/AdminDashboard.css'; 
+import '../../styles/AdminDashboard.css';
 
 const GestorDocentes = () => {
-  const { 
+  const {
     docentes, facultades, columns,
-    searchTerm, setSearchTerm, 
-    filterTipo, setFilterTipo,         
-    filterEstado, setFilterEstado,     
+    searchTerm, setSearchTerm,
+    filterTipo, setFilterTipo,
+    filterEstado, setFilterEstado,
     modalState, loading, isSaving,
     openAddModal, openEditModal, closeModal,
     handleSaveDocente, handleInputChange, handleCheckboxChange, confirmChangeStatus, executeStatusChange,
@@ -26,16 +26,16 @@ const GestorDocentes = () => {
   const renderActions = (row) => (
     <div className="action-buttons">
       <button className="btn-text-edit" onClick={() => openEditModal(row)} title="Editar Docente">Editar</button>
-      
+
       {row.activo !== false ? (
         <button className="btn-text-delete" onClick={() => confirmChangeStatus(row, 'desactivar')} title="Eliminar Docente (Soft Delete)">
           Eliminar
         </button>
       ) : (
-        <button 
-          className="btn-text-edit" 
-          style={{ color: '#2E7D32', borderColor: '#2E7D32', backgroundColor: '#E8F5E9' }} 
-          onClick={() => confirmChangeStatus(row, 'activar')} 
+        <button
+          className="btn-text-edit"
+          style={{ color: '#2E7D32', borderColor: '#2E7D32', backgroundColor: '#E8F5E9' }}
+          onClick={() => confirmChangeStatus(row, 'activar')}
           title="Reactivar Docente"
         >
           Reactivar
@@ -47,28 +47,28 @@ const GestorDocentes = () => {
   return (
     <div className="tab-view-container">
       <div className="filters-bar filters-bar-advanced">
-        <SearchBar 
-          value={searchTerm} 
-          onChange={setSearchTerm} 
-          placeholder="Buscar docente o correo..." 
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Buscar docente o correo..."
         />
-        <Filtro 
-          value={filterTipo} 
-          onChange={setFilterTipo} 
+        <Filtro
+          value={filterTipo}
+          onChange={setFilterTipo}
           defaultLabel="Todos los contratos"
           options={[
             { label: 'Tiempo Completo', value: 'Tiempo Completo' },
             { label: 'Hora Clase', value: 'Hora Clase' }
-          ]} 
+          ]}
         />
-        <Filtro 
-          value={filterEstado} 
-          onChange={setFilterEstado} 
+        <Filtro
+          value={filterEstado}
+          onChange={setFilterEstado}
           defaultLabel="Todos los estados"
           options={[
             { label: 'Activos', value: 'activos' },
             { label: 'Inactivos', value: 'inactivos' }
-          ]} 
+          ]}
         />
         <button className="btn-primary" onClick={openAddModal}>
           + Nuevo Docente
@@ -89,16 +89,16 @@ const GestorDocentes = () => {
         isOpen={modalState.isOpen}
         onClose={closeModal}
         title={
-          modalState.type === 'add' ? 'Registrar Docente' : 
-          modalState.type === 'edit' ? 'Editar Docente' : 'Confirmar Acción'
+          modalState.type === 'add' ? 'Registrar Docente' :
+            modalState.type === 'edit' ? 'Editar Docente' : 'Confirmar Acción'
         }
         footer={
           modalState.type === 'confirmStatusChange' ? (
             <>
               <button className="btn-cancel" onClick={closeModal} disabled={isSaving}>Cancelar</button>
-              <button 
-                className={formData?.action === 'desactivar' ? "btn-text-delete" : "btn-save"} 
-                onClick={executeStatusChange} 
+              <button
+                className={formData?.action === 'desactivar' ? "btn-text-delete" : "btn-save"}
+                onClick={executeStatusChange}
                 disabled={isSaving}
                 style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
               >
@@ -126,8 +126,8 @@ const GestorDocentes = () => {
           ) : (
             <>
               <button className="btn-cancel" onClick={closeModal} disabled={isSaving}>Cancelar</button>
-              <button 
-                className="btn-save" 
+              <button
+                className="btn-save"
                 onClick={() => handleSaveDocente(formData)}
                 disabled={isSaving}
                 style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
@@ -141,7 +141,7 @@ const GestorDocentes = () => {
         {notificationModal.show && modalState.isOpen && (
           <Notification show={notificationModal.show} message={notificationModal.message} type={notificationModal.type} onClose={() => setNotificationModal({ ...notificationModal, show: false })} />
         )}
-        
+
         {modalState.type === 'confirmStatusChange' ? (
           <div className="confirm-text">
             <p>
@@ -171,12 +171,12 @@ const GestorDocentes = () => {
               <div className="form-row">
                 <div className="form-group-modal full-width">
                   <label>Correo Electrónico {modalState.type === 'edit' && '(No modificable)'}</label>
-                  <input 
-                    type="email" 
-                    name="email" 
-                    value={formData.email || ''} 
-                    onChange={handleInputChange} 
-                    placeholder="correo@catolica.edu.sv" 
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email || ''}
+                    onChange={handleInputChange}
+                    placeholder="correo@catolica.edu.sv"
                     disabled={modalState.type === 'edit' || isSaving}
                   />
                 </div>
@@ -186,7 +186,13 @@ const GestorDocentes = () => {
               <div className="form-row">
                 <div className="form-group-modal">
                   <label>Tipo de Contratación</label>
-                  <select name="tipo" value={formData.tipo || ''} onChange={handleInputChange} className="form-select" disabled={isSaving}>
+                  <select
+                    name="tipo"
+                    value={formData.tipo || ''}
+                    onChange={(e) => handleTipoChange(e.target.value)}
+                    className="form-select"
+                    disabled={isSaving}
+                  >
                     <option value="Tiempo Completo">Tiempo Completo</option>
                     <option value="Hora Clase">Hora Clase</option>
                   </select>
@@ -196,17 +202,17 @@ const GestorDocentes = () => {
               <div className="form-row">
                 <div className="form-group-modal">
                   <label>Carga Mínima (Hrs)</label>
-                  <input 
-                    type="number" name="carga_minima" value={formData.carga_minima ?? ''} onChange={handleInputChange} 
-                    min="0" placeholder="Ej. 10" onKeyDown={(e) => ['e', 'E', '+', '-', '.', ','].includes(e.key) && e.preventDefault()} 
+                  <input
+                    type="number" name="carga_minima" value={formData.carga_minima ?? ''} onChange={handleInputChange}
+                    min="0" placeholder="Ej. 10" onKeyDown={(e) => ['e', 'E', '+', '-', '.', ','].includes(e.key) && e.preventDefault()}
                     disabled={isSaving}
                   />
                 </div>
                 <div className="form-group-modal">
                   <label>Carga Máxima (Hrs)</label>
-                  <input 
-                    type="number" name="carga_maxima" value={formData.carga_maxima ?? ''} onChange={handleInputChange} 
-                    min="0" placeholder="Ej. 40" onKeyDown={(e) => ['e', 'E', '+', '-', '.', ','].includes(e.key) && e.preventDefault()} 
+                  <input
+                    type="number" name="carga_maxima" value={formData.carga_maxima ?? ''} onChange={handleInputChange}
+                    min="0" placeholder="Ej. 40" onKeyDown={(e) => ['e', 'E', '+', '-', '.', ','].includes(e.key) && e.preventDefault()}
                     disabled={isSaving}
                   />
                 </div>
@@ -215,14 +221,14 @@ const GestorDocentes = () => {
               <div className="form-row">
                 <div className="form-group-modal full-width">
                   <label>Facultades Asignadas</label>
-                  
+
                   <div className="checkbox-list">
                     {facultades.length > 0 ? (
                       facultades
                         .filter(fac => fac.activo || (modalState.type === 'edit' && formData.facultades?.includes(fac.id_facultad)))
                         .map(fac => (
                           <label key={fac.id_facultad} className="checkbox-label" style={{ opacity: isSaving ? 0.6 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}>
-                            <input 
+                            <input
                               type="checkbox"
                               checked={formData.facultades?.includes(fac.id_facultad) || false}
                               onChange={() => { if (!isSaving) handleCheckboxChange(fac.id_facultad) }}
@@ -232,7 +238,7 @@ const GestorDocentes = () => {
                               {fac.nombre} {!fac.activo && <em>(Inactiva)</em>}
                             </span>
                           </label>
-                      ))
+                        ))
                     ) : (
                       <span className="no-data-text full-width">No hay facultades disponibles.</span>
                     )}

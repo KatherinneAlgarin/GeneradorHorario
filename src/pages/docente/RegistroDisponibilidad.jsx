@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useRegistroDisponibilidad } from '../../hooks/useRegistroDisponibilidad';
-import Notification from '../../components/common/Notification';
+import ModalGeneral from '../../components/common/ModalGeneral';
 import '../../styles/DocenteStyles.css';
 
 const DIAS_SEMANA = [
@@ -14,22 +14,19 @@ const DIAS_SEMANA = [
 
 const RegistroDisponibilidad = () => {
   const {
-    loading, isSaving, notification, setNotification,
-    docente, ciclo, isEditable,
+    loading, isSaving, alertModal, setAlertModal,
+    docente, ciclo, isEditable, mensajeBloqueo,
     bloques, bloquesSeleccionados, toggleBloque,
     asignaturas, asignaturasSeleccionadas, toggleAsignatura,
     horasOfrecidas, handleGuardar
   } = useRegistroDisponibilidad();
 
-  // 1. Lógica para estructurar la cuadrícula (Extraer filas de horas únicas)
   const horasUnicas = useMemo(() => {
     if (!bloques || bloques.length === 0) return [];
-    // Obtenemos los rangos de horas y quitamos duplicados
     const rangos = bloques.map(b => `${b.hora_inicio.slice(0, 5)} - ${b.hora_fin.slice(0, 5)}`);
-    return [...new Set(rangos)].sort(); // Ordenados cronológicamente
+    return [...new Set(rangos)].sort(); 
   }, [bloques]);
 
-  // Función para encontrar si existe un bloque en un día y hora específicos
   const obtenerBloqueEnCelda = (diaId, rangoHora) => {
     const [inicio, fin] = rangoHora.split(' - ');
     return bloques.find(b => 
@@ -41,8 +38,8 @@ const RegistroDisponibilidad = () => {
 
   if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Cargando información...</div>;
 
-  // Cálculos para el termómetro
   const metaHoras = docente?.carga_minima || 0;
+  const maxHoras = docente?.carga_maxima || 0;
   const porcentaje = metaHoras > 0 ? Math.min((horasOfrecidas / metaHoras) * 100, 100) : 100;
   const cumpleMinimo = horasOfrecidas >= metaHoras;
 
@@ -53,27 +50,17 @@ const RegistroDisponibilidad = () => {
         <p>Ciclo Activo: <strong>{ciclo?.nombre}</strong></p>
       </div>
 
-      {notification.show && (
-        <Notification 
-          show={notification.show} 
-          message={notification.message} 
-          type={notification.type} 
-          onClose={() => setNotification({ ...notification, show: false })} 
-        />
-      )}
-
-      {/* AVISO SI NO ES EDITABLE (Criterio 7) */}
       {!isEditable && (
         <div className="alert-banner">
-          ⚠️ <strong>Solo lectura.</strong> El periodo de planificación ha finalizado o los horarios ya están en revisión.
+          <strong>Solo lectura.</strong> {mensajeBloqueo || "El periodo de planificación ha finalizado."}
         </div>
       )}
 
-      {/* TERMÓMETRO DE HORAS */}
+      {/* TERMÓMETRO DE HORAS ACTUALIZADO */}
       <div className="progress-container">
         <div className="progress-header">
           <span>Horas Ofertadas: {horasOfrecidas} hrs</span>
-          <span>Mínimo por Contrato: {metaHoras} hrs</span>
+          <span>Contrato: {metaHoras} hrs mín - {maxHoras} hrs máx</span>
         </div>
         <div className="progress-bar-bg">
           <div 
@@ -83,23 +70,20 @@ const RegistroDisponibilidad = () => {
         </div>
         {!cumpleMinimo && metaHoras > 0 && (
           <p style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '8px', marginBottom: 0 }}>
-            Faltan {parseFloat((metaHoras - horasOfrecidas).toFixed(1))} horas para cumplir su contrato.
+            Faltan {Math.max(0, metaHoras - horasOfrecidas)} horas para cumplir el mínimo de su contrato.
           </p>
         )}
       </div>
 
-      {/* CUADRÍCULA DE HORARIO */}
       <div className="schedule-grid-container">
         <h3>1. Seleccione sus bloques de tiempo libre</h3>
         
         <div className="schedule-grid">
-          {/* Fila de Encabezados */}
           <div className="grid-header" style={{ backgroundColor: '#fff', color: '#fff' }}>Hora</div>
           {DIAS_SEMANA.map(dia => (
             <div key={dia.id} className="grid-header">{dia.nombre}</div>
           ))}
 
-          {/* Filas de Horas */}
           {horasUnicas.map(rango => (
             <React.Fragment key={rango}>
               <div className="grid-time-label">{rango}</div>
@@ -127,7 +111,6 @@ const RegistroDisponibilidad = () => {
         </div>
       </div>
 
-      {/* PREFERENCIAS DE ASIGNATURAS */}
       <div className="subjects-container">
         <h3>2. Seleccione las asignaturas que desea impartir</h3>
         <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '15px' }}>
@@ -161,16 +144,34 @@ const RegistroDisponibilidad = () => {
         )}
       </div>
 
-      {/* CONTROLES DE GUARDADO */}
       <div className="bottom-controls">
         <button 
           className="btn-save-large" 
           onClick={handleGuardar}
           disabled={!isEditable || isSaving}
+          style={{ 
+            opacity: (!isEditable || isSaving) ? 0.5 : 1, 
+            cursor: (!isEditable || isSaving) ? 'not-allowed' : 'pointer' 
+          }}
         >
           {isSaving ? 'Guardando preferencias...' : 'Guardar Disponibilidad'}
         </button>
       </div>
+
+      <ModalGeneral
+        isOpen={alertModal.show}
+        onClose={() => setAlertModal({ ...alertModal, show: false })}
+        title={alertModal.title}
+        footer={
+          <button className="btn-save" onClick={() => setAlertModal({ ...alertModal, show: false })}>
+            Aceptar
+          </button>
+        }
+      >
+        <p style={{ padding: '15px 5px', fontSize: '1rem', color: '#333', lineHeight: '1.5' }}>
+          {alertModal.message}
+        </p>
+      </ModalGeneral>
 
     </div>
   );

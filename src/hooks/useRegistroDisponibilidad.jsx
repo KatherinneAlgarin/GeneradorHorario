@@ -12,7 +12,9 @@ export const useRegistroDisponibilidad = () => {
   const [bloquesSeleccionados, setBloquesSeleccionados] = useState([]);
   const [asignaturasSeleccionadas, setAsignaturasSeleccionadas] = useState([]);
   const [isEditable, setIsEditable] = useState(true);
-  const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
+  const [mensajeBloqueo, setMensajeBloqueo] = useState("");
+  
+  const [alertModal, setAlertModal] = useState({ show: false, title: '', message: '', type: 'info' });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -20,7 +22,7 @@ export const useRegistroDisponibilidad = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        setNotification({ show: true, message: "Usuario no autenticado", type: 'error' });
+        setAlertModal({ show: true, title: 'Error', message: "Usuario no autenticado", type: 'error' });
         return;
       }
 
@@ -31,12 +33,12 @@ export const useRegistroDisponibilidad = () => {
         .maybeSingle();
 
       if (!docenteData) {
-        setNotification({ show: true, message: "No se encontró información de docente", type: 'error' });
+        setAlertModal({ show: true, title: 'Error', message: "No se encontró información de docente", type: 'error' });
         return;
       }
 
       if (!docenteData.activo) {
-        setNotification({ show: true, message: "Su cuenta está inactiva", type: 'error' });
+        setAlertModal({ show: true, title: 'Acceso Denegado', message: "Su cuenta está inactiva", type: 'error' });
         return;
       }
 
@@ -50,7 +52,6 @@ export const useRegistroDisponibilidad = () => {
 
       setDocente(docenteInfo);
 
-      //trar información del ciclo activo, bloques horarios, asignaturas y preferencias del docente
       const cicloActivo = await apiRequest('/ciclos/activo');
       setCiclo(cicloActivo);
 
@@ -72,10 +73,13 @@ export const useRegistroDisponibilidad = () => {
 
       const estadoHorario = await apiRequest(`/horarios/estado-docente/${docenteInfo.id_docente}`);
       setIsEditable(estadoHorario.editable);
+      if (!estadoHorario.editable) {
+        setMensajeBloqueo(estadoHorario.mensaje);
+      }
 
     } catch (error) {
       console.error("Error al cargar disponibilidad:", error);
-      setNotification({ show: true, message: error.message || "Error al cargar los datos.", type: 'error' });
+      setAlertModal({ show: true, title: 'Error de Conexión', message: error.message || "Error al cargar los datos.", type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -115,33 +119,24 @@ export const useRegistroDisponibilidad = () => {
         total += calcularHoras(bloqueObj.hora_inicio, bloqueObj.hora_fin);
       }
     });
-    return parseFloat(total.toFixed(1));
+    return Math.ceil(total); 
   }, [bloquesSeleccionados, bloques]);
 
   const handleGuardar = async () => {
     if (!docente || !ciclo) {
-      setNotification({ show: true, message: "Error: faltan datos del docente o ciclo", type: 'error' });
-      return;
-    }
-
-    if (docente.carga_minima > 0 && horasOfrecidas < docente.carga_minima) {
-      setNotification({ 
-        show: true, 
-        message: `Faltan horas. Su contrato es de ${docente.carga_minima} hrs, pero solo ha seleccionado ${horasOfrecidas} hrs.`, 
-        type: 'error' 
-      });
+      setAlertModal({ show: true, title: 'Error', message: "Error: faltan datos del docente o ciclo", type: 'error' });
       return;
     }
 
     if (asignaturasSeleccionadas.length === 0) {
-      setNotification({ show: true, message: "Debes seleccionar al menos una materia de preferencia.", type: 'error' });
+      setAlertModal({ show: true, title: 'Atención requerida', message: "Debes seleccionar al menos una materia de preferencia.", type: 'warning' });
       return;
     }
 
     setIsSaving(true);
-    setNotification({ show: false, message: '', type: 'error' });
 
     try {
+      // guardar la disponibilidad
       await apiRequest(`/preferencias-docente/disponibilidad/${docente.id_docente}`, {
         method: 'POST',
         body: JSON.stringify({ 
@@ -150,6 +145,7 @@ export const useRegistroDisponibilidad = () => {
         })
       });
 
+      // Mandamos a guardar las asignaturas
       await apiRequest(`/preferencias-docente/asignaturas/${docente.id_docente}`, {
         method: 'POST',
         body: JSON.stringify({ 
@@ -158,19 +154,20 @@ export const useRegistroDisponibilidad = () => {
         })
       });
 
-      setNotification({ show: true, message: "¡Sus preferencias han sido guardadas exitosamente!", type: 'success' });
+      setAlertModal({ show: true, title: '¡Éxito!', message: "¡Sus preferencias han sido guardadas exitosamente!", type: 'success' });
       
     } catch (error) {
       console.error("Error al guardar:", error);
-      setNotification({ show: true, message: error.message || "Error al guardar los datos.", type: 'error' });
+      //  error 400 del backend horas insuficientes, etc.
+      setAlertModal({ show: true, title: 'Aviso Importante', message: error.message || "Error al guardar los datos.", type: 'error' });
     } finally {
       setIsSaving(false);
     }
   };
 
   return {
-    loading, isSaving, notification, setNotification,
-    docente, ciclo, isEditable,
+    loading, isSaving, alertModal, setAlertModal,
+    docente, ciclo, isEditable,mensajeBloqueo,
     bloques, bloquesSeleccionados, toggleBloque,
     asignaturas, asignaturasSeleccionadas, toggleAsignatura,
     horasOfrecidas, handleGuardar

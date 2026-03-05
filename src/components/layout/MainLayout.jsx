@@ -34,7 +34,7 @@ const MainLayout = () => {
             <>
               <li className="nav-item">
                 <Link to="/admin" className="nav-link">
-                  Dashboard
+                  Horarios
                 </Link>
               </li>
 
@@ -56,11 +56,11 @@ const MainLayout = () => {
                 </Link>
               </li>
 
-              <li className="nav-item">
+              {/* <li className="nav-item">
                 <Link to="/admin/horarios" className="nav-link">
                   Horarios
                 </Link>
-              </li>
+              </li> */}
             </>
           )}
 

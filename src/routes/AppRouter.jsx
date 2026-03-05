@@ -37,7 +37,7 @@ export const AppRouter = () => {
                 <Route path="docentes" element={<GestorUsuarios />} />
                 <Route path="infraestructura" element={<GestorInfraestructura />} />
                 <Route path="academico" element={<OpcionTabs />} />
-                <Route path="horarios" element={<div>Horarios</div>} />
+                {/* <Route path="horarios" element={<div>Horarios</div>} /> */}
             </Route>
 
             {/* RUTA PROTEGIDA DOCENTE */}
