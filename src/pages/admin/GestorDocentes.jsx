@@ -16,7 +16,7 @@ const GestorDocentes = () => {
     modalState, loading, isSaving,
     openAddModal, openEditModal, closeModal,
     handleSaveDocente, handleInputChange, handleCheckboxChange, confirmChangeStatus, executeStatusChange,
-    notificationModal, setNotificationModal,
+    notificationModal, setNotificationModal,handleTipoChange,
     notification, setNotification,
     confirmSaveWithWarning
   } = useDocentes();

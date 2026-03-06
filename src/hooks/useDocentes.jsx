@@ -325,7 +325,7 @@ export const useDocentes = () => {
     searchTerm, setSearchTerm, filterTipo, setFilterTipo, filterEstado, setFilterEstado,   
     modalState, loading, isSaving, openAddModal, openEditModal, closeModal,
     handleSaveDocente, handleInputChange, handleCheckboxChange, confirmChangeStatus, executeStatusChange,
-    notificationModal, setNotificationModal, notification, setNotification,
+    notificationModal, setNotificationModal, handleTipoChange, notification, setNotification,
     confirmSaveWithWarning
   };
 };
